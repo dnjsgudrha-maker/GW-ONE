@@ -1,0 +1,68 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isApprovedUser() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.approved != false &&
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.disabled != true;
+    }
+
+    function isRepresentative() {
+      return isApprovedUser() &&
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == "대표";
+    }
+
+    match /admins/{userId} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == userId);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /profiles/{userId} {
+      allow create: if signedIn() && request.auth.uid == userId;
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow update: if signedIn() && (
+        isAdmin() ||
+        (
+          request.auth.uid == userId &&
+          request.resource.data.approved == resource.data.approved &&
+          request.resource.data.disabled == resource.data.disabled &&
+          request.resource.data.role == resource.data.role
+        )
+      );
+    }
+
+    match /users/{userId}/jobs/{jobId} {
+      allow read:
+        if signedIn() &&
+        (
+          (request.auth.uid == userId && isApprovedUser()) ||
+          isRepresentative() ||
+          isAdmin()
+        );
+
+      allow create, update, delete:
+        if signedIn() &&
+        (
+          (request.auth.uid == userId && isApprovedUser()) ||
+          isAdmin()
+        );
+    }
+
+    // 대표 및 관리자의 전체 작업현황(collectionGroup("jobs")) 조회 허용
+    match /{documentPath=**}/jobs/{jobId} {
+      allow read: if isRepresentative() || isAdmin();
+    }
+
+  }
+}
