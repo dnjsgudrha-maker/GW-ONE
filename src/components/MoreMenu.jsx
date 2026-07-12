@@ -11,8 +11,8 @@ export default function MoreMenu({
   largeText,
   installAvailable
 }) {
-  const canViewSettlement = role === "대표" || role === "관리자";
-  const canManageUsers = role === "관리자";
+  const canViewSettlement = role === "대표" || role === "최고관리자";
+  const canManageUsers = role === "최고관리자";
 
   return (
     <section className="panel easy-more-page">

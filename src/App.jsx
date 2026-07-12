@@ -230,10 +230,19 @@ function App() {
       collectionGroup(db, "jobs"),
       (snapshot) => {
         setAllJobs(
-          snapshot.docs.map((item) => ({
-            id: item.id,
-            ...item.data()
-          }))
+          snapshot.docs.map((item) => {
+            const ownerUid =
+              item.data().ownerUid ||
+              item.ref.parent.parent?.id ||
+              "";
+
+            return {
+              id: item.id,
+              ownerUid,
+              jobPath: item.ref.path,
+              ...item.data()
+            };
+          })
         );
       },
       (error) => setNotice(`전체 작업현황을 불러오지 못했습니다: ${error.message}`)
@@ -254,7 +263,14 @@ function App() {
     return onSnapshot(
       jobsQuery,
       (snapshot) =>
-        setJobs(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))),
+        setJobs(
+          snapshot.docs.map((item) => ({
+            id: item.id,
+            ownerUid: item.data().ownerUid || user.uid,
+            jobPath: item.ref.path,
+            ...item.data()
+          }))
+        ),
       (error) => setNotice(`목록을 불러오지 못했습니다: ${error.message}`)
     );
   }, [user]);
@@ -673,10 +689,14 @@ function App() {
           ? afterPhotoUrls
           : editingJob.afterPhotoUrls || [];
 
+        const editingOwnerUid = editingJob.ownerUid || user.uid;
+
         await updateDoc(
-          doc(db, "users", user.uid, "jobs", editingJob.id),
+          doc(db, "users", editingOwnerUid, "jobs", editingJob.id),
           {
             ...commonData,
+            ownerUid: editingOwnerUid,
+            ownerEmail: editingJob.ownerEmail || commonData.ownerEmail,
             beforePhotoUrls: beforePhotoUrlsFinal,
             duringPhotoUrls: duringPhotoUrlsFinal,
             afterPhotoUrls: afterPhotoUrlsFinal,
@@ -729,12 +749,32 @@ function App() {
     }
   };
 
-  const handleDelete = async (jobId) => {
-    if (!window.confirm("이 작업일지를 삭제할까요?")) return;
+  const handleDelete = async (job) => {
+    if (!job?.id) return;
+
+    const ownerUid = job.ownerUid || user.uid;
+    const isOwnJob = ownerUid === user.uid;
+
+    if (!isAdmin && !isOwnJob) {
+      setNotice("다른 사용자의 작업일지는 최고관리자만 삭제할 수 있습니다.");
+      return;
+    }
+
+    const ownerName =
+      allProfiles.find((item) => item.uid === ownerUid)?.representativeName ||
+      job.worker ||
+      "해당 사용자";
+
+    const message = isOwnJob
+      ? "이 작업일지를 삭제할까요?"
+      : `${ownerName}님이 작성한 작업일지를 최고관리자 권한으로 삭제할까요?`;
+
+    if (!window.confirm(message)) return;
 
     try {
-      await deleteDoc(doc(db, "users", user.uid, "jobs", jobId));
+      await deleteDoc(doc(db, "users", ownerUid, "jobs", job.id));
       setSelectedJob(null);
+      setNotice("작업일지를 삭제했습니다.");
     } catch (error) {
       setNotice(`삭제하지 못했습니다: ${error.message}`);
     }
@@ -837,10 +877,10 @@ function App() {
     form.address
   );
 
-  const currentRole = isAdmin ? "관리자" : profile.role || "기사";
+  const currentRole = isAdmin ? "최고관리자" : profile.role || "기사";
   const canViewSettlement =
-    currentRole === "관리자" || currentRole === "대표";
-  const canManageUsers = currentRole === "관리자";
+    currentRole === "최고관리자" || currentRole === "대표";
+  const canManageUsers = currentRole === "최고관리자";
 
   const thisMonth = new Date().toISOString().slice(0, 7);
   const thisMonthCount = jobs.filter((job) =>
@@ -1027,7 +1067,14 @@ function App() {
         <JobModal
           job={selectedJob}
           onClose={() => setSelectedJob(null)}
-          onDelete={() => handleDelete(selectedJob.id)}
+          onDelete={() => handleDelete(selectedJob)}
+          canDelete={
+            isAdmin || (selectedJob.ownerUid || user.uid) === user.uid
+          }
+          canEdit={
+            isAdmin || (selectedJob.ownerUid || user.uid) === user.uid
+          }
+          isSuperAdmin={isAdmin}
           onNotice={setNotice}
           onOpenDocument={setDocumentType}
           onEdit={() => startEditJob(selectedJob)}

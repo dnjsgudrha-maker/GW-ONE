@@ -97,7 +97,7 @@ export default function UserManagement({
                   </div>
                   <div>
                     <span>권한</span>
-                    <strong>{isAdmin ? "관리자" : profile.role || "기사"}</strong>
+                    <strong>{isAdmin ? "최고관리자" : profile.role || "기사"}</strong>
                   </div>
                   <div>
                     <span>UID</span>
@@ -153,7 +153,7 @@ export default function UserManagement({
                       className="admin"
                       onClick={() => onMakeAdmin(profile.uid)}
                     >
-                      관리자 지정
+                      최고관리자 지정
                     </button>
                   )}
 
@@ -162,7 +162,7 @@ export default function UserManagement({
                       className="remove-admin"
                       onClick={() => onRemoveAdmin(profile.uid)}
                     >
-                      관리자 해제
+                      최고관리자 해제
                     </button>
                   )}
                 </div>

@@ -44,7 +44,10 @@ export default function JobModal({
   onNotice,
   onOpenDocument,
   onEdit,
-  onCopy
+  onCopy,
+  canEdit = true,
+  canDelete = true,
+  isSuperAdmin = false
 }) {
   const paymentBreakdown = getPaymentBreakdown(job);
 
@@ -178,13 +181,17 @@ export default function JobModal({
           </button>
         </div>
 
-        <button className="edit-button" onClick={onEdit}>
-          ✏️ 작업일지 수정
-        </button>
+        {canEdit && (
+          <button className="edit-button" onClick={onEdit}>
+            ✏️ {isSuperAdmin ? "작업일지 수정(최고관리자)" : "작업일지 수정"}
+          </button>
+        )}
 
-        <button className="delete-button" onClick={onDelete}>
-          작업일지 삭제
-        </button>
+        {canDelete && (
+          <button className="delete-button" onClick={onDelete}>
+            {isSuperAdmin ? "작업일지 삭제(최고관리자)" : "작업일지 삭제"}
+          </button>
+        )}
       </section>
     </div>
   );
