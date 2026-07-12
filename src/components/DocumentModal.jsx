@@ -14,8 +14,9 @@ function DocumentHeader({ title, job }) {
     <>
       <div className="doc-title">{title}</div>
       <div className="doc-subtitle">
-        {job.businessName || "업체명"} · 대표 {job.representativeName || "-"} ·{" "}
-        {job.businessContact || "-"}
+        {job.businessName || "업체명"} · 대표 {job.representativeName || "-"}
+        {job.businessNumber ? ` · ${job.businessNumber}` : ""}
+        {job.businessContact ? ` · ${job.businessContact}` : ""}
       </div>
     </>
   );
@@ -129,11 +130,16 @@ function DocumentFooter({ job }) {
       <div>
         <strong>{job.businessName || "업체명"}</strong>
         <span>대표 {job.representativeName || "-"}</span>
-        <span>{job.businessContact || "-"}</span>
+        {job.businessNumber && (
+          <span>사업자등록번호 {job.businessNumber}</span>
+        )}
+        {job.businessContact && <span>{job.businessContact}</span>}
+        {job.businessEmail && <span>{job.businessEmail}</span>}
+        {job.businessAddress && <span>{job.businessAddress}</span>}
       </div>
       <div className="doc-stamp">
-        {job.stampUrl ? (
-          <img src={job.stampUrl} alt="직인" />
+        {job.stampDataUrl || job.stampUrl ? (
+          <img src={job.stampDataUrl || job.stampUrl} alt="직인" />
         ) : (
           <span>직인</span>
         )}

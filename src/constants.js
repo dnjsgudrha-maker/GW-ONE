@@ -33,7 +33,11 @@ export const PAYMENT_METHODS = [
 export const initialProfile = {
   businessName: "",
   representativeName: "",
+  businessNumber: "",
   contact: "",
+  businessEmail: "",
+  businessAddress: "",
+  stampDataUrl: "",
   stampUrl: ""
 };
 

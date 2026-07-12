@@ -37,6 +37,11 @@ import {
   initialProfile
 } from "./constants";
 import { getCustomerHistory } from "./utils/customers";
+import {
+  DEFAULT_STAMP_DATA_URL,
+  imageFileToDataUrl,
+  isValidBusinessNumber
+} from "./utils/businessProfile";
 import { compressImages } from "./utils/images";
 import { CenteredCard } from "./components/Common";
 import JobForm from "./components/JobForm";
@@ -375,36 +380,45 @@ function App() {
       return;
     }
 
+    if (!isValidBusinessNumber(profile.businessNumber)) {
+      setNotice("사업자등록번호 10자리를 확인해 주세요.");
+      return;
+    }
+
     setProfileSaving(true);
     setNotice("");
 
     try {
-      let stampUrl = profile.stampUrl || "";
+      let stampDataUrl =
+        profile.stampDataUrl ||
+        profile.stampUrl ||
+        DEFAULT_STAMP_DATA_URL;
 
-      if (stampFile) {
-        const safeName = stampFile.name.replace(/[^\w.\-가-힣]/g, "_");
-        const stampRef = ref(
-          storage,
-          `users/${user.uid}/profile/stamp_${Date.now()}_${safeName}`
-        );
-
-        await uploadBytes(stampRef, stampFile);
-        stampUrl = await getDownloadURL(stampRef);
+      if (stampFile?.file) {
+        stampDataUrl = await imageFileToDataUrl(stampFile.file);
       }
+
+      const savedProfile = {
+        ...profile,
+        stampDataUrl,
+        stampUrl: "",
+        uid: user.uid,
+        email: user.email || "",
+        updatedAt: serverTimestamp()
+      };
 
       await setDoc(
         doc(db, "profiles", user.uid),
-        {
-          ...profile,
-          stampUrl,
-          uid: user.uid,
-          email: user.email || "",
-          updatedAt: serverTimestamp()
-        },
+        savedProfile,
         { merge: true }
       );
 
-      setProfile((current) => ({ ...current, stampUrl }));
+      setProfile(savedProfile);
+
+      if (stampFile?.previewUrl) {
+        URL.revokeObjectURL(stampFile.previewUrl);
+      }
+
       setStampFile(null);
       setNotice("내 업체정보를 저장했습니다.");
     } catch (error) {
@@ -413,7 +427,6 @@ function App() {
       setProfileSaving(false);
     }
   };
-
 
 
   const openNewJobForm = () => {
@@ -598,8 +611,15 @@ function App() {
         paymentDifference: chargeAmount - paymentTotal,
         businessName: profile.businessName?.trim() || "GW배관솔루션",
         representativeName: profile.representativeName?.trim() || "",
+        businessNumber: profile.businessNumber?.trim() || "",
         businessContact: profile.contact?.trim() || "",
-        stampUrl: profile.stampUrl || "",
+        businessEmail: profile.businessEmail?.trim() || "",
+        businessAddress: profile.businessAddress?.trim() || "",
+        stampDataUrl:
+          profile.stampDataUrl ||
+          profile.stampUrl ||
+          DEFAULT_STAMP_DATA_URL,
+        stampUrl: "",
         leakData: form.jobType === "누수탐지" ? leakData : null,
         leakOpinion:
           form.jobType === "누수탐지" ? leakData.opinionText || "" : "",
