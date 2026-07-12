@@ -10,7 +10,7 @@ export default function ProfilePage(props) {
         </div>
         <button className="text-button" onClick={props.onBack}>뒤로</button>
       </div>
-      <ProfileBox {...props} />
+      <ProfileBox {...props} forceOpen />
     </section>
   );
 }

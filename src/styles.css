@@ -2990,3 +2990,53 @@ button { cursor: pointer; }
     padding-right: 10px;
   }
 }
+
+
+/* GW ONE v3.4 누적 금액 + 카드/세금계산서 10% */
+.quick-amount-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.quick-amount-header span {
+  color: #667085;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.quick-amount-header button {
+  border: 1px solid #efb0aa;
+  border-radius: 9px;
+  padding: 7px 10px;
+  background: #fff4f2;
+  color: #b42318;
+  font-weight: 800;
+}
+
+.charge-summary small {
+  font-size: 12px;
+  opacity: .85;
+}
+
+.split-payment-label small {
+  color: #b54708;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+
+/* GW ONE v3.5 기사 저장 오류 안내 */
+.save-confirm-error {
+  margin: 14px 0 0;
+  padding: 11px 12px;
+  border: 1px solid #f3b8b3;
+  border-radius: 10px;
+  background: #fff1f0;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+  text-align: center;
+}

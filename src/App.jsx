@@ -459,6 +459,8 @@ function App() {
       followUpMemo: "",
       equipment: job.equipment || [],
       chargeAmount: String(job.chargeAmount || ""),
+      baseChargeAmount: String(job.baseChargeAmount || job.chargeAmount || ""),
+      taxAddedPayment: job.taxAddedPayment || "",
       commissionType:
         job.commissionType ||
         (Number(job.commissionFixedAmount || 0) > 0 ? "fixed" : "percent"),
@@ -510,6 +512,8 @@ function App() {
       followUpMemo: "",
       equipment: job.equipment || [],
       chargeAmount: String(job.chargeAmount || ""),
+      baseChargeAmount: String(job.baseChargeAmount || job.chargeAmount || ""),
+      taxAddedPayment: job.taxAddedPayment || "",
       commissionType:
         job.commissionType ||
         (Number(job.commissionFixedAmount || 0) > 0 ? "fixed" : "percent"),
@@ -556,11 +560,8 @@ function App() {
   const handleSave = async (event) => {
     event?.preventDefault?.();
 
-    if (!profile.businessName.trim()) {
-      setNotice("먼저 업체정보를 등록해 주세요.");
-      return;
-    }
-
+    // 기사 계정은 개인 업체정보가 비어 있어도 작업을 저장할 수 있습니다.
+    // 회사 기본 업체명은 저장 시 자동 적용합니다.
     if (!form.address.trim() || !form.workContent.trim()) {
       setNotice("현장 주소와 작업내용은 꼭 입력해 주세요.");
       return false;
@@ -595,9 +596,9 @@ function App() {
         paymentBreakdown,
         paymentTotal,
         paymentDifference: chargeAmount - paymentTotal,
-        businessName: profile.businessName,
-        representativeName: profile.representativeName,
-        businessContact: profile.contact,
+        businessName: profile.businessName?.trim() || "GW배관솔루션",
+        representativeName: profile.representativeName?.trim() || "",
+        businessContact: profile.contact?.trim() || "",
         stampUrl: profile.stampUrl || "",
         leakData: form.jobType === "누수탐지" ? leakData : null,
         leakOpinion:
@@ -650,6 +651,8 @@ function App() {
       setForm((current) => ({
         ...createInitialForm(),
         worker: current.worker,
+        baseChargeAmount: "",
+        taxAddedPayment: "",
         commissionType: current.commissionType || "percent",
         commissionRate: current.commissionRate || "30",
         commissionFixedAmount: "",

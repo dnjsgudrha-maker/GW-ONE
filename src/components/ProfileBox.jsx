@@ -6,10 +6,14 @@ export default function ProfileBox({
   stampFile,
   setStampFile,
   onSave,
-  saving
+  saving,
+  forceOpen = false
 }) {
   return (
-    <details className="profile-box" open={!profile.businessName}>
+    <details
+      className="profile-box"
+      defaultOpen={forceOpen || !profile.businessName}
+    >
       <summary>업체정보 · {profile.businessName || "등록 필요"}</summary>
 
       <div className="profile-fields">

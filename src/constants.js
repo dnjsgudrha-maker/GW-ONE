@@ -52,6 +52,8 @@ export const createInitialForm = () => ({
   followUpMemo: "",
   equipment: [],
   chargeAmount: "",
+  baseChargeAmount: "",
+  taxAddedPayment: "",
   commissionType: "percent",
   commissionRate: "30",
   commissionFixedAmount: "",

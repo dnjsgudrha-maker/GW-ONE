@@ -10,7 +10,7 @@ const FIELDS = [
   ["cash", "현금"],
   ["transfer", "계좌입금"],
   ["card", "카드"],
-  ["invoice", "계산서 발행"]
+  ["invoice", "세금계산서"]
 ];
 
 const QUICK_AMOUNTS = [
@@ -23,6 +23,11 @@ const QUICK_AMOUNTS = [
 ];
 
 const QUICK_RATES = ["10", "15", "20", "25", "30", "40"];
+const TAX_KEYS = new Set(["card", "invoice"]);
+
+function roundedTaxIncluded(amount) {
+  return Math.round(Number(amount || 0) * 1.1);
+}
 
 export default function PaymentBox({
   form,
@@ -47,6 +52,20 @@ export default function PaymentBox({
 
   const difference = chargeAmount - paymentTotal;
 
+  const getBaseAmount = () => {
+    const savedBase = Number(form.baseChargeAmount || 0);
+    if (savedBase > 0) return savedBase;
+    return Number(chargeAmount || 0);
+  };
+
+  const resetPayment = (key, amount) => ({
+    cash: "",
+    transfer: "",
+    card: "",
+    invoice: "",
+    [key]: String(amount || "")
+  });
+
   const updatePayment = (key, value) => {
     setForm({
       ...form,
@@ -57,23 +76,82 @@ export default function PaymentBox({
     });
   };
 
-  const setChargeAmount = (amount) => {
+  // 버튼은 교체가 아니라 계속 더해집니다.
+  // 예: 10만 + 5만 = 15만, 10만 + 10만 = 20만
+  const addChargeAmount = (amount) => {
+    const base = getBaseAmount();
+    const nextBase = base + amount;
+    const taxKey = form.taxAddedPayment || "";
+    const nextCharge = TAX_KEYS.has(taxKey)
+      ? roundedTaxIncluded(nextBase)
+      : nextBase;
+
     setForm({
       ...form,
-      chargeAmount: String(amount)
+      baseChargeAmount: String(nextBase),
+      chargeAmount: String(nextCharge),
+      paymentBreakdown: TAX_KEYS.has(taxKey)
+        ? resetPayment(taxKey, nextCharge)
+        : form.paymentBreakdown
     });
   };
 
-  const fillAll = (key) => {
+  const changeChargeAmount = (value) => {
+    const raw = rawNumericValue(value);
+
     setForm({
       ...form,
+      chargeAmount: raw,
+      baseChargeAmount: raw,
+      taxAddedPayment: "",
       paymentBreakdown: {
         cash: "",
         transfer: "",
         card: "",
-        invoice: "",
-        [key]: String(chargeAmount || "")
+        invoice: ""
       }
+    });
+  };
+
+  const clearChargeAmount = () => {
+    setForm({
+      ...form,
+      chargeAmount: "",
+      baseChargeAmount: "",
+      taxAddedPayment: "",
+      paymentBreakdown: {
+        cash: "",
+        transfer: "",
+        card: "",
+        invoice: ""
+      }
+    });
+  };
+
+  const fillAll = (key) => {
+    const base = getBaseAmount();
+
+    if (TAX_KEYS.has(key)) {
+      const taxIncluded = roundedTaxIncluded(base);
+
+      setForm({
+        ...form,
+        baseChargeAmount: String(base),
+        chargeAmount: String(taxIncluded),
+        taxAddedPayment: key,
+        paymentMethod: key === "card" ? "카드" : "계산서 발행",
+        paymentBreakdown: resetPayment(key, taxIncluded)
+      });
+      return;
+    }
+
+    setForm({
+      ...form,
+      baseChargeAmount: String(base),
+      chargeAmount: String(base),
+      taxAddedPayment: "",
+      paymentMethod: key === "cash" ? "현금" : "계좌입금",
+      paymentBreakdown: resetPayment(key, base)
     });
   };
 
@@ -97,30 +175,37 @@ export default function PaymentBox({
           className="easy-large-input payment-main-input"
           inputMode="numeric"
           value={formatNumericInput(form.chargeAmount)}
-          onChange={(event) =>
-            setForm({
-              ...form,
-              chargeAmount: rawNumericValue(event.target.value)
-            })
-          }
+          onChange={(event) => changeChargeAmount(event.target.value)}
           placeholder="예: 350,000"
         />
       </Field>
+
+      <div className="quick-amount-header">
+        <span>누를 때마다 금액이 더해집니다.</span>
+        <button type="button" onClick={clearChargeAmount}>
+          금액 초기화
+        </button>
+      </div>
 
       <div className="quick-amount-row">
         {QUICK_AMOUNTS.map(([label, amount]) => (
           <button
             type="button"
             key={label}
-            onClick={() => setChargeAmount(amount)}
+            onClick={() => addChargeAmount(amount)}
           >
-            {label}
+            + {label}
           </button>
         ))}
       </div>
 
       <div className="charge-summary">
-        <span>청구금액</span>
+        <span>
+          청구금액
+          {TAX_KEYS.has(form.taxAddedPayment) && (
+            <small> · 10% 포함</small>
+          )}
+        </span>
         <strong>{formatWon(chargeAmount)}</strong>
       </div>
 
@@ -222,8 +307,8 @@ export default function PaymentBox({
         <div className="easy-payment-guide">
           <strong>어떻게 받았나요?</strong>
           <span>
-            한 가지 방법으로 전부 받았다면 ‘전액’을 누르세요.
-            여러 방법으로 받았다면 금액을 나눠 입력하세요.
+            현금·계좌입금은 원래 금액으로 입력됩니다.
+            카드·세금계산서의 ‘전액’을 누르면 10%가 자동으로 추가됩니다.
           </span>
         </div>
 
@@ -231,11 +316,14 @@ export default function PaymentBox({
           {FIELDS.map(([key, label]) => (
             <div className="split-payment-item" key={key}>
               <div className="split-payment-label">
-                <span>{label}</span>
+                <span>
+                  {label}
+                  {TAX_KEYS.has(key) && <small> +10%</small>}
+                </span>
                 <button
                   type="button"
                   onClick={() => fillAll(key)}
-                  disabled={!chargeAmount}
+                  disabled={!getBaseAmount()}
                 >
                   전액
                 </button>

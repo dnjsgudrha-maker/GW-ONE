@@ -1,7 +1,7 @@
 {
   "name": "gw-one",
   "private": true,
-  "version": "3.1.1",
+  "version": "3.5.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,10 +12,11 @@
     "firebase": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "tesseract.js": "latest",
-    "vite": "latest",
-    "@vitejs/plugin-react": "latest",
-    "vite-plugin-pwa": "latest"
+    "tesseract.js": "latest"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "vite-plugin-pwa": "latest"
+  }
 }

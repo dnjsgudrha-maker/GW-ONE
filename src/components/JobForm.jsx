@@ -61,6 +61,7 @@ export default function JobForm({
   );
   const [step, setStep] = useState(1);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     localStorage.setItem("gw-one-easy-mode", easyMode ? "on" : "off");
@@ -129,12 +130,22 @@ export default function JobForm({
     }
 
     onNotice("");
+    setSaveError("");
     setSaveConfirmOpen(true);
   };
 
   const confirmSave = async () => {
+    setSaveError("");
     const saved = await onSave();
-    if (saved) setSaveConfirmOpen(false);
+
+    if (saved) {
+      setSaveConfirmOpen(false);
+      return;
+    }
+
+    setSaveError(
+      "저장되지 않았습니다. 화면 위의 안내문을 확인한 뒤 다시 눌러 주세요."
+    );
   };
 
   return (
@@ -657,6 +668,10 @@ export default function JobForm({
                   </div>
                 )}
               </div>
+
+              {saveError && (
+                <p className="save-confirm-error">{saveError}</p>
+              )}
 
               <div className="save-confirm-actions">
                 <button
