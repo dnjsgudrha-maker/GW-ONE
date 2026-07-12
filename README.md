@@ -1,32 +1,30 @@
-# GW ONE v3.0 FINAL
+# GW ONE v3.1 GitHub Edition
 
-누수·배관·하수 현장용 작업관리 웹앱입니다.
+현장 작업일지, 고객관리, 월정산, 사용자관리, 사진관리, 문서출력을 위한 웹앱입니다.
 
-## 주요 기능
-
-- 쉬운 3단계 작업입력
-- 문자·카카오톡 캡처 OCR
-- 누수 전용 소견서 엔진
-- 일반 작업 템플릿
-- 현장 사진 촬영·압축·저장
-- 유연한 수수료 입력
-- 현금·계좌·카드·계산서 복수 결제
-- 작업일지 수정·복사·공유
-- 고객 재방문 이력
-- 재방문·AS 일정 알림
-- 월별 정산과 CSV
-- 사용자 승인·권한관리
-- 작업보고서·소견서·영수증·제출 패키지
-- 큰 글씨 모드
-- JSON 데이터 백업
-- PWA 설치
-- GitHub Pages 자동 배포
-
-## 실행
+## 로컬 실행
 
 ```bash
 npm install
 npm run dev
 ```
 
-기존 `.env` 파일을 프로젝트 루트에 복사해야 합니다.
+프로젝트 루트에 `.env` 파일이 필요합니다.
+
+## GitHub Pages 배포
+
+1. 저장소의 `Settings → Secrets and variables → Actions`
+2. 아래 Repository secrets 6개 등록
+   - `VITE_FIREBASE_API_KEY`
+   - `VITE_FIREBASE_AUTH_DOMAIN`
+   - `VITE_FIREBASE_PROJECT_ID`
+   - `VITE_FIREBASE_STORAGE_BUCKET`
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+   - `VITE_FIREBASE_APP_ID`
+3. `Settings → Pages → Source`를 `GitHub Actions`로 설정
+4. `main` 브랜치에 Push하면 자동 배포
+
+## 주의
+
+- `.env` 파일은 GitHub에 올리지 않습니다.
+- Firebase Authentication의 승인된 도메인에 `dnjsgudrha-maker.github.io`를 추가해야 합니다.
