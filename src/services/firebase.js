@@ -2,6 +2,5 @@ export {
   auth,
   db,
   firebaseReady,
-  googleProvider,
-  storage
+  googleProvider
 } from "../firebase";

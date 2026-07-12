@@ -16,16 +16,14 @@ export const firebaseReady = Object.values(firebaseConfig).every(Boolean);
 let app;
 let auth;
 let db;
-let storage;
 let googleProvider;
 
 if (firebaseReady) {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
-  storage = getStorage(app);
   googleProvider = new GoogleAuthProvider();
   googleProvider.setCustomParameters({ prompt: "select_account" });
 }
 
-export { auth, db, storage, googleProvider };
+export { auth, db, googleProvider };
