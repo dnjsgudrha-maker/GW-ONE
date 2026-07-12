@@ -28,13 +28,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Show versions
-        run: |
-          node --version
-          npm --version
-
       - name: Install dependencies
-        run: npm install --include=dev --no-audit --no-fund
+        run: npm install --no-audit --no-fund
+
+      - name: Verify Vite
+        run: npx vite --version
 
       - name: Build application
         env:
