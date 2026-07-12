@@ -9,6 +9,8 @@ export default function MoreMenu({
   onBackup,
   onToggleLargeText,
   largeText,
+  onEnableNotifications,
+  notificationPermission,
   installAvailable
 }) {
   const canViewSettlement = role === "대표" || role === "최고관리자";
@@ -71,6 +73,22 @@ export default function MoreMenu({
           <small>작업내역 파일로 저장</small>
         </button>
 
+        {canViewSettlement && (
+          <button onClick={onEnableNotifications}>
+            <span>🔔</span>
+            <strong>
+              {notificationPermission === "granted"
+                ? "작업 알림 켜짐"
+                : "작업 알림 켜기"}
+            </strong>
+            <small>
+              {notificationPermission === "granted"
+                ? "기사 작업등록 시 바로 알림"
+                : "브라우저 알림 권한 허용"}
+            </small>
+          </button>
+        )}
+
         {installAvailable && (
           <button onClick={onInstall}>
             <span>📲</span>
@@ -81,7 +99,7 @@ export default function MoreMenu({
       </div>
 
       <div className="version-box">
-        <strong>GW ONE v3.0 FINAL</strong>
+        <strong>GW ONE v3.9</strong>
         <span>현장 실사용 완성 버전</span>
       </div>
     </section>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   onAuthStateChanged,
   signInWithPopup,
@@ -14,6 +14,7 @@ import {
   getDoc,
   onSnapshot,
   orderBy,
+  limit,
   query,
   serverTimestamp,
   setDoc,
@@ -94,6 +95,12 @@ function App() {
   const [largeText, setLargeText] = useState(
     () => localStorage.getItem("gw-one-large-text") === "on"
   );
+  const [jobAlert, setJobAlert] = useState(null);
+  const [notificationPermission, setNotificationPermission] = useState(
+    () => ("Notification" in window ? Notification.permission : "unsupported")
+  );
+  const notificationListenerReady = useRef(false);
+  const jobAlertTimer = useRef(null);
 
 
 
@@ -276,6 +283,108 @@ function App() {
   }, [user]);
 
 
+
+  useEffect(() => {
+    if (!user || !db) {
+      notificationListenerReady.current = false;
+      return;
+    }
+
+    const canReceiveJobAlerts =
+      isAdmin || profile.role === "대표";
+
+    if (!canReceiveJobAlerts) {
+      notificationListenerReady.current = false;
+      return;
+    }
+
+    const alertsQuery = query(
+      collection(db, "jobNotifications"),
+      orderBy("createdAt", "desc"),
+      limit(20)
+    );
+
+    return onSnapshot(
+      alertsQuery,
+      (snapshot) => {
+        // 첫 연결 때 과거 알림이 한꺼번에 뜨는 것을 막습니다.
+        if (!notificationListenerReady.current) {
+          notificationListenerReady.current = true;
+          return;
+        }
+
+        const added = snapshot
+          .docChanges()
+          .filter((change) => change.type === "added")
+          .map((change) => ({
+            id: change.doc.id,
+            ...change.doc.data()
+          }))
+          .filter((alert) => alert.actorUid !== user.uid);
+
+        if (!added.length) return;
+
+        const alert = added[0];
+        const actorName =
+          alert.actorName ||
+          alert.actorEmail ||
+          "작업자";
+        const message =
+          `${actorName} 작업자가 ${alert.jobType || "작업"}을 등록했습니다.`;
+
+        setJobAlert({
+          ...alert,
+          message
+        });
+
+        if (jobAlertTimer.current) {
+          clearTimeout(jobAlertTimer.current);
+        }
+
+        jobAlertTimer.current = setTimeout(() => {
+          setJobAlert(null);
+        }, 9000);
+
+        if (
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
+          new Notification("GW ONE 작업 등록", {
+            body: `${message}\n${alert.address || ""}`,
+            icon: `${import.meta.env.BASE_URL}pwa-192x192.png`,
+            tag: `gw-one-job-${alert.id}`
+          });
+        }
+      },
+      (error) => {
+        setNotice(`작업 등록 알림을 불러오지 못했습니다: ${error.message}`);
+      }
+    );
+  }, [user, isAdmin, profile.role]);
+
+  useEffect(
+    () => () => {
+      if (jobAlertTimer.current) clearTimeout(jobAlertTimer.current);
+    },
+    []
+  );
+
+  const enableJobNotifications = async () => {
+    if (!("Notification" in window)) {
+      setNotice("이 기기에서는 브라우저 알림을 지원하지 않습니다.");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+
+    if (permission === "granted") {
+      setNotice("작업 등록 알림을 켰습니다.");
+    } else {
+      setNotice("브라우저에서 알림 권한이 허용되지 않았습니다.");
+    }
+  };
+
   useEffect(() => {
     if (!user || editingJob || view !== "form") return;
     const timer = setTimeout(() => {
@@ -341,10 +450,16 @@ function App() {
   const commissionRate = Number(form.commissionRate) || 0;
   const commissionFixedAmount =
     Number(String(form.commissionFixedAmount || "").replace(/,/g, "")) || 0;
+  // 카드·세금계산서의 10% 추가금은 수수료 계산에서 제외합니다.
+  // 예: 원금 100,000원 + 카드 10% = 청구 110,000원
+  //     수수료 30%는 110,000원이 아닌 원금 100,000원의 30,000원
+  const commissionBaseAmount =
+    Number(String(form.baseChargeAmount || "").replace(/,/g, "")) ||
+    chargeAmount;
   const commissionAmount =
     commissionType === "fixed"
       ? commissionFixedAmount
-      : Math.round((chargeAmount * commissionRate) / 100);
+      : Math.round((commissionBaseAmount * commissionRate) / 100);
   const netAmount = Math.max(chargeAmount - commissionAmount, 0);
   const paymentBreakdown = form.paymentBreakdown || {
     cash: "",
@@ -650,6 +765,7 @@ function App() {
         chargeAmount,
         commissionType,
         commissionRate,
+        commissionBaseAmount,
         commissionFixedAmount,
         commissionAmount,
         netAmount,
@@ -708,18 +824,43 @@ function App() {
           }
         );
       } else {
-        await addDoc(collection(db, "users", user.uid, "jobs"), {
-          ...commonData,
-          beforePhotoUrls,
-          duringPhotoUrls,
-          afterPhotoUrls,
-          photoUrls: [
-            ...beforePhotoUrls,
-            ...duringPhotoUrls,
-            ...afterPhotoUrls
-          ],
-          createdAt: serverTimestamp()
-        });
+        const createdJobRef = await addDoc(
+          collection(db, "users", user.uid, "jobs"),
+          {
+            ...commonData,
+            beforePhotoUrls,
+            duringPhotoUrls,
+            afterPhotoUrls,
+            photoUrls: [
+              ...beforePhotoUrls,
+              ...duringPhotoUrls,
+              ...afterPhotoUrls
+            ],
+            createdAt: serverTimestamp()
+          }
+        );
+
+        // 작업 저장 성공과 알림 저장은 분리합니다.
+        // 알림이 실패해도 작업일지는 정상 저장됩니다.
+        try {
+          await addDoc(collection(db, "jobNotifications"), {
+            jobId: createdJobRef.id,
+            ownerUid: user.uid,
+            actorUid: user.uid,
+            actorEmail: user.email || "",
+            actorName:
+              form.worker ||
+              profile.representativeName ||
+              user.displayName ||
+              "작업자",
+            jobType: form.jobType || "작업",
+            address: form.address || "",
+            chargeAmount,
+            createdAt: serverTimestamp()
+          });
+        } catch (notificationError) {
+          console.warn("작업 알림 저장 실패:", notificationError);
+        }
       }
 
       setForm((current) => ({
@@ -890,6 +1031,36 @@ function App() {
   return (
     <div className={largeText ? "app-shell large-text-mode" : "app-shell"}>
       <NetworkBanner />
+
+      {jobAlert && (
+        <button
+          type="button"
+          className="job-registration-alert"
+          onClick={() => {
+            const matchedJob = allJobs.find(
+              (job) =>
+                job.id === jobAlert.jobId &&
+                (job.ownerUid || "") === (jobAlert.ownerUid || "")
+            );
+
+            if (matchedJob) setSelectedJob(matchedJob);
+            setJobAlert(null);
+          }}
+        >
+          <span className="job-alert-icon">🔔</span>
+          <div>
+            <strong>{jobAlert.message}</strong>
+            <small>
+              {jobAlert.address || "주소 미입력"}
+              {jobAlert.chargeAmount
+                ? ` · ${Number(jobAlert.chargeAmount).toLocaleString()}원`
+                : ""}
+            </small>
+          </div>
+          <span className="job-alert-close">×</span>
+        </button>
+      )}
+
       <TopBar
         profile={profile}
         user={user}
@@ -952,6 +1123,7 @@ function App() {
             onNotice={setNotice}
             chargeAmount={chargeAmount}
             commissionAmount={commissionAmount}
+            commissionBaseAmount={commissionBaseAmount}
             netAmount={netAmount}
             customerHistory={customerHistory}
             leakData={leakData}
@@ -1009,6 +1181,8 @@ function App() {
             }
             onToggleLargeText={() => setLargeText((current) => !current)}
             largeText={largeText}
+            onEnableNotifications={enableJobNotifications}
+            notificationPermission={notificationPermission}
             installAvailable={Boolean(deferredInstallPrompt)}
           />
         )}

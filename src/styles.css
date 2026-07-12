@@ -3221,3 +3221,96 @@ button { cursor: pointer; }
     flex-direction: column;
   }
 }
+
+
+/* GW ONE v3.9 원금 수수료 + 작업등록 알림 */
+
+.commission-base-guide {
+  display: grid;
+  gap: 4px;
+  padding: 12px 13px;
+  border: 1px solid #d8c7f1;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.commission-base-guide span {
+  color: #7a6a90;
+  font-size: 12px;
+}
+
+.commission-base-guide strong {
+  color: #6941c6;
+  font-size: 19px;
+}
+
+.commission-base-guide small {
+  color: #b54708;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.job-registration-alert {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 500;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 11px;
+  width: min(540px, calc(100% - 24px));
+  min-height: 72px;
+  padding: 13px 14px;
+  border: 1px solid #8ec5a8;
+  border-radius: 16px;
+  background: #effcf3;
+  color: #075e3a;
+  text-align: left;
+  box-shadow: 0 16px 42px rgba(15, 23, 42, .24);
+  transform: translateX(-50%);
+  animation: job-alert-in .22s ease-out;
+}
+
+.job-alert-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #d7f5e2;
+  font-size: 22px;
+}
+
+.job-registration-alert strong,
+.job-registration-alert small {
+  display: block;
+}
+
+.job-registration-alert strong {
+  font-size: 15px;
+}
+
+.job-registration-alert small {
+  margin-top: 5px;
+  color: #397459;
+  font-size: 12px;
+}
+
+.job-alert-close {
+  color: #397459;
+  font-size: 23px;
+  font-weight: 500;
+}
+
+@keyframes job-alert-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

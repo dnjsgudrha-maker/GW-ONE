@@ -34,6 +34,7 @@ export default function PaymentBox({
   setForm,
   chargeAmount,
   commissionAmount,
+  commissionBaseAmount,
   netAmount
 }) {
   const payment = form.paymentBreakdown || {
@@ -290,6 +291,16 @@ export default function PaymentBox({
             />
           </Field>
         )}
+
+        <div className="commission-base-guide">
+          <span>수수료 계산 기준</span>
+          <strong>{formatWon(commissionBaseAmount)}</strong>
+          {chargeAmount !== commissionBaseAmount && (
+            <small>
+              카드·세금계산서 10% 추가금은 수수료 계산에서 제외
+            </small>
+          )}
+        </div>
 
         <div className="commission-result-grid">
           <div>

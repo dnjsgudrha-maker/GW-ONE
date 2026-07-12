@@ -50,6 +50,7 @@ export default function JobForm({
   onNotice,
   chargeAmount,
   commissionAmount,
+  commissionBaseAmount,
   netAmount,
   customerHistory,
   leakData,
@@ -520,6 +521,7 @@ export default function JobForm({
               setForm={setForm}
               chargeAmount={chargeAmount}
               commissionAmount={commissionAmount}
+              commissionBaseAmount={commissionBaseAmount}
               netAmount={netAmount}
             />
 
