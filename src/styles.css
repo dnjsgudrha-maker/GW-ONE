@@ -3314,3 +3314,84 @@ button { cursor: pointer; }
     transform: translate(-50%, 0);
   }
 }
+
+
+/* GW ONE v4.0 Cloudinary 사진 업로드 */
+
+.cloud-photo-card {
+  overflow: hidden;
+}
+
+.photo-upload-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(13, 23, 38, .78);
+  color: #fff;
+  text-align: center;
+}
+
+.photo-upload-overlay strong {
+  font-size: 13px;
+}
+
+.photo-upload-overlay small {
+  max-width: 160px;
+  color: #eef4ff;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.photo-progress-track {
+  width: min(150px, 80%);
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.25);
+}
+
+.photo-progress-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #63d297;
+  transition: width .18s ease;
+}
+
+.photo-retry-button {
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: #fff;
+  color: #b42318;
+  font-weight: 900;
+}
+
+.photo-upload-done {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  z-index: 2;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(18, 135, 79, .92);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+
+.cloud-photo-card.error {
+  outline: 2px solid #d92d20;
+}
+
+.cloud-photo-card.uploading,
+.cloud-photo-card.retrying {
+  outline: 2px solid #2e90fa;
+}

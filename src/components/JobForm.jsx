@@ -486,18 +486,21 @@ export default function JobForm({
               </div>
               <PhotoField
                 title="작업 전"
+                folder="before"
                 files={beforePhotos}
                 onChange={setBeforePhotos}
                 onNotice={onNotice}
               />
               <PhotoField
                 title="작업 중"
+                folder="during"
                 files={duringPhotos}
                 onChange={setDuringPhotos}
                 onNotice={onNotice}
               />
               <PhotoField
                 title="작업 후"
+                folder="after"
                 files={afterPhotos}
                 onChange={setAfterPhotos}
                 onNotice={onNotice}

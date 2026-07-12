@@ -21,16 +21,10 @@ import {
   updateDoc
 } from "firebase/firestore";
 import {
-  getDownloadURL,
-  ref,
-  uploadBytes
-} from "firebase/storage";
-import {
   auth,
   db,
   firebaseReady,
-  googleProvider,
-  storage
+  googleProvider
 } from "./firebase";
 import {
   createInitialForm,
@@ -44,7 +38,12 @@ import {
   isValidBusinessNumber
 } from "./utils/businessProfile";
 import { resolveDocumentBusiness } from "./utils/businesses";
-import { compressImages } from "./utils/images";
+import {
+  existingPhotoItem,
+  hasFailedPhotos,
+  hasPendingPhotos,
+  photoUrls
+} from "./utils/cloudinary";
 import { CenteredCard } from "./components/Common";
 import JobForm from "./components/JobForm";
 import JobList from "./components/JobList";
@@ -473,29 +472,6 @@ function App() {
     Number(paymentBreakdown.card || 0) +
     Number(paymentBreakdown.invoice || 0);
 
-  const uploadPhotoGroup = async (files, folder) => {
-    if (!files.length) return [];
-
-    const urls = [];
-    const compressedFiles = await compressImages(files);
-
-    for (let index = 0; index < compressedFiles.length; index += 1) {
-      const file = compressedFiles[index];
-      const safeName = file.name.replace(/[^\w.\-가-힣]/g, "_");
-      const fileRef = ref(
-        storage,
-        `users/${user.uid}/jobs/${Date.now()}_${index}_${folder}_${safeName}`
-      );
-
-      await uploadBytes(fileRef, file, {
-        contentType: file.type || "image/jpeg"
-      });
-      urls.push(await getDownloadURL(fileRef));
-    }
-
-    return urls;
-  };
-
   const handleLogin = async () => {
     setNotice("");
 
@@ -705,9 +681,21 @@ function App() {
       }
     );
 
-    setBeforePhotos([]);
-    setDuringPhotos([]);
-    setAfterPhotos([]);
+    setBeforePhotos(
+      (job.beforePhotoUrls || []).map((url, index) =>
+        existingPhotoItem(url, index)
+      )
+    );
+    setDuringPhotos(
+      (job.duringPhotoUrls || []).map((url, index) =>
+        existingPhotoItem(url, index)
+      )
+    );
+    setAfterPhotos(
+      (job.afterPhotoUrls || []).map((url, index) =>
+        existingPhotoItem(url, index)
+      )
+    );
     setSelectedJob(null);
     setView("form");
     setNotice("작업일지를 수정 중입니다.");
@@ -745,12 +733,25 @@ function App() {
     setNotice("");
 
     try {
-      const [beforePhotoUrls, duringPhotoUrls, afterPhotoUrls] =
-        await Promise.all([
-          uploadPhotoGroup(beforePhotos, "before"),
-          uploadPhotoGroup(duringPhotos, "during"),
-          uploadPhotoGroup(afterPhotos, "after")
-        ]);
+      const allPhotoItems = [
+        ...beforePhotos,
+        ...duringPhotos,
+        ...afterPhotos
+      ];
+
+      if (hasPendingPhotos(allPhotoItems)) {
+        setNotice("사진 업로드가 끝난 뒤 저장해 주세요.");
+        return false;
+      }
+
+      if (hasFailedPhotos(allPhotoItems)) {
+        setNotice("업로드에 실패한 사진을 다시 시도하거나 삭제해 주세요.");
+        return false;
+      }
+
+      const beforePhotoUrls = photoUrls(beforePhotos);
+      const duringPhotoUrls = photoUrls(duringPhotos);
+      const afterPhotoUrls = photoUrls(afterPhotos);
 
       const selectedBusiness = resolveDocumentBusiness(
         profile,
@@ -795,15 +796,9 @@ function App() {
       };
 
       if (editingJob) {
-        const beforePhotoUrlsFinal = beforePhotoUrls.length
-          ? beforePhotoUrls
-          : editingJob.beforePhotoUrls || [];
-        const duringPhotoUrlsFinal = duringPhotoUrls.length
-          ? duringPhotoUrls
-          : editingJob.duringPhotoUrls || [];
-        const afterPhotoUrlsFinal = afterPhotoUrls.length
-          ? afterPhotoUrls
-          : editingJob.afterPhotoUrls || [];
+        const beforePhotoUrlsFinal = beforePhotoUrls;
+        const duringPhotoUrlsFinal = duringPhotoUrls;
+        const afterPhotoUrlsFinal = afterPhotoUrls;
 
         const editingOwnerUid = editingJob.ownerUid || user.uid;
 
