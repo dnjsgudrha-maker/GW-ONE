@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/GW-ONE/sw.js', { scope: '/GW-ONE/' })})}
