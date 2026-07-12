@@ -42,6 +42,7 @@ import {
   imageFileToDataUrl,
   isValidBusinessNumber
 } from "./utils/businessProfile";
+import { resolveDocumentBusiness } from "./utils/businesses";
 import { compressImages } from "./utils/images";
 import { CenteredCard } from "./components/Common";
 import JobForm from "./components/JobForm";
@@ -463,6 +464,17 @@ function App() {
       address: job.address || "",
       jobType: job.jobType || "누수탐지",
       worker: job.worker || "",
+      issuerBusinessId: job.issuerBusinessId || "own",
+      issuerBusinessSnapshot: job.issuerBusinessSnapshot || {
+        id: job.issuerBusinessId || "saved",
+        businessName: job.businessName || "",
+        representativeName: job.representativeName || "",
+        businessNumber: job.businessNumber || "",
+        contact: job.businessContact || "",
+        businessEmail: job.businessEmail || "",
+        businessAddress: job.businessAddress || "",
+        stampDataUrl: job.stampDataUrl || ""
+      },
       workContent: job.workContent || "",
       result: job.result || "",
       asPeriod: job.asPeriod || "1년",
@@ -516,6 +528,17 @@ function App() {
       address: job.address || "",
       jobType: job.jobType || "누수탐지",
       worker: job.worker || "",
+      issuerBusinessId: job.issuerBusinessId || "own",
+      issuerBusinessSnapshot: job.issuerBusinessSnapshot || {
+        id: job.issuerBusinessId || "saved",
+        businessName: job.businessName || "",
+        representativeName: job.representativeName || "",
+        businessNumber: job.businessNumber || "",
+        contact: job.businessContact || "",
+        businessEmail: job.businessEmail || "",
+        businessAddress: job.businessAddress || "",
+        stampDataUrl: job.stampDataUrl || ""
+      },
       workContent: job.workContent || "",
       result: job.result || "",
       asPeriod: job.asPeriod || "1년",
@@ -598,8 +621,16 @@ function App() {
           uploadPhotoGroup(afterPhotos, "after")
         ]);
 
+      const selectedBusiness = resolveDocumentBusiness(
+        profile,
+        form.issuerBusinessId || "own",
+        form.issuerBusinessSnapshot
+      );
+
       const commonData = {
         ...form,
+        issuerBusinessId: selectedBusiness.id || "own",
+        issuerBusinessSnapshot: selectedBusiness,
         chargeAmount,
         commissionType,
         commissionRate,
@@ -609,13 +640,16 @@ function App() {
         paymentBreakdown,
         paymentTotal,
         paymentDifference: chargeAmount - paymentTotal,
-        businessName: profile.businessName?.trim() || "GW배관솔루션",
-        representativeName: profile.representativeName?.trim() || "",
-        businessNumber: profile.businessNumber?.trim() || "",
-        businessContact: profile.contact?.trim() || "",
-        businessEmail: profile.businessEmail?.trim() || "",
-        businessAddress: profile.businessAddress?.trim() || "",
+        businessName:
+          selectedBusiness.businessName?.trim() || "GW배관솔루션",
+        representativeName:
+          selectedBusiness.representativeName?.trim() || "",
+        businessNumber: selectedBusiness.businessNumber?.trim() || "",
+        businessContact: selectedBusiness.contact?.trim() || "",
+        businessEmail: selectedBusiness.businessEmail?.trim() || "",
+        businessAddress: selectedBusiness.businessAddress?.trim() || "",
         stampDataUrl:
+          selectedBusiness.stampDataUrl ||
           profile.stampDataUrl ||
           profile.stampUrl ||
           DEFAULT_STAMP_DATA_URL,

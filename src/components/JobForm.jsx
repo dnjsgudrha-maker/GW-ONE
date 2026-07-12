@@ -8,6 +8,7 @@ import ProfileBox from "./ProfileBox";
 import LeakOpinionEngine from "./LeakOpinionEngine";
 import WorkTemplateEngine from "./WorkTemplateEngine";
 import { formatWon, normalizePhone } from "../utils/formatters";
+import { getDocumentBusinesses } from "../utils/businesses";
 
 function StepButton({ number, label, active, done, onClick }) {
   return (
@@ -62,6 +63,13 @@ export default function JobForm({
   const [step, setStep] = useState(1);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const businessOptions = getDocumentBusinesses(profile);
+  const selectedBusiness =
+    businessOptions.find(
+      (business) => business.id === (form.issuerBusinessId || "own")
+    ) ||
+    form.issuerBusinessSnapshot ||
+    businessOptions[0];
 
   useEffect(() => {
     localStorage.setItem("gw-one-easy-mode", easyMode ? "on" : "off");
@@ -303,6 +311,57 @@ export default function JobForm({
                 />
               </Field>
 
+
+              <div className="document-business-select-box">
+                <Field label="문서에 표시할 상호">
+                  <select
+                    value={form.issuerBusinessId || "own"}
+                    onChange={(event) => {
+                      const business = businessOptions.find(
+                        (item) => item.id === event.target.value
+                      );
+
+                      setForm({
+                        ...form,
+                        issuerBusinessId: event.target.value,
+                        issuerBusinessSnapshot: business || null
+                      });
+                    }}
+                  >
+                    {businessOptions.map((business) => (
+                      <option key={business.id} value={business.id}>
+                        {business.businessName || "내 업체정보 미등록"}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                <div className="selected-business-card">
+                  <div>
+                    <span>선택 상호</span>
+                    <strong>
+                      {selectedBusiness?.businessName || "업체정보 미등록"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>사업자등록번호</span>
+                    <strong>
+                      {selectedBusiness?.businessNumber || "미입력"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>대표자</span>
+                    <strong>
+                      {selectedBusiness?.representativeName || "미입력"}
+                    </strong>
+                  </div>
+                  <p>
+                    문서만 선택한 상호로 발행되며, 작업 수입은 현재 로그인한
+                    사용자에게 그대로 집계됩니다.
+                  </p>
+                </div>
+              </div>
+
               <div className="two-column">
                 <Field label="작업일">
                   <input
@@ -541,6 +600,16 @@ export default function JobForm({
                 <strong>{form.jobType}</strong>
               </div>
               <div>
+                <span>문서 상호</span>
+                <strong>
+                  {selectedBusiness?.businessName || "업체정보 미등록"}
+                </strong>
+              </div>
+              <div>
+                <span>사업자번호</span>
+                <strong>{selectedBusiness?.businessNumber || "미입력"}</strong>
+              </div>
+              <div>
                 <span>금액</span>
                 <strong>{formatWon(chargeAmount)}</strong>
               </div>
@@ -644,6 +713,16 @@ export default function JobForm({
                 <div>
                   <span>작업자</span>
                   <strong>{form.worker || "-"}</strong>
+                </div>
+                <div>
+                  <span>문서 상호</span>
+                  <strong>
+                    {selectedBusiness?.businessName || "업체정보 미등록"}
+                  </strong>
+                </div>
+                <div>
+                  <span>사업자번호</span>
+                  <strong>{selectedBusiness?.businessNumber || "미입력"}</strong>
                 </div>
                 <div>
                   <span>청구금액</span>

@@ -38,7 +38,8 @@ export const initialProfile = {
   businessEmail: "",
   businessAddress: "",
   stampDataUrl: "",
-  stampUrl: ""
+  stampUrl: "",
+  documentBusinesses: []
 };
 
 export const createInitialForm = () => ({
@@ -47,6 +48,8 @@ export const createInitialForm = () => ({
   address: "",
   jobType: "누수탐지",
   worker: "",
+  issuerBusinessId: "own",
+  issuerBusinessSnapshot: null,
   workContent: "",
   result: "",
   asPeriod: "1년",

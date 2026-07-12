@@ -3081,3 +3081,143 @@ button { cursor: pointer; }
 .doc-stamp img {
   object-fit: contain;
 }
+
+
+/* GW ONE v3.7 문서 발행 상호 선택 */
+.document-business-select-box {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 14px;
+  border: 2px solid #b9d3f1;
+  border-radius: 15px;
+  background: #f4f9ff;
+}
+
+.selected-business-card {
+  display: grid;
+  gap: 8px;
+}
+
+.selected-business-card > div {
+  display: grid;
+  grid-template-columns: 115px 1fr;
+  gap: 10px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.selected-business-card span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.selected-business-card strong {
+  overflow-wrap: anywhere;
+}
+
+.selected-business-card p {
+  margin: 2px 0 0;
+  color: #1261c9;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.business-section-label {
+  padding: 12px;
+  border-radius: 12px;
+  background: #eef6ff;
+}
+
+.business-section-label strong,
+.business-section-label span {
+  display: block;
+}
+
+.business-section-label strong {
+  color: #1261c9;
+  font-size: 16px;
+}
+
+.business-section-label span {
+  margin-top: 5px;
+  color: #52677f;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.document-business-manager {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #dce5ef;
+}
+
+.saved-business-list {
+  display: grid;
+  gap: 8px;
+}
+
+.saved-business-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #dce5ef;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.saved-business-list article strong,
+.saved-business-list article span {
+  display: block;
+}
+
+.saved-business-list article span {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.saved-business-list article button {
+  border: 1px solid #efb0aa;
+  border-radius: 8px;
+  padding: 6px 9px;
+  background: #fff4f2;
+  color: #b42318;
+  font-weight: 800;
+}
+
+.empty-business-guide {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.business-add-toggle {
+  min-height: 44px;
+}
+
+.business-add-form {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border: 1px dashed #9fc3ef;
+  border-radius: 12px;
+  background: #fafcff;
+}
+
+@media (max-width: 520px) {
+  .selected-business-card > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .saved-business-list article {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
