@@ -213,7 +213,10 @@ function App() {
   }, [user]);
 
   useEffect(() => {
-    if (!user || !db || !isAdmin) {
+    const canReadAllProfiles =
+      isAdmin || profile.role === "대표";
+
+    if (!user || !db || !canReadAllProfiles) {
       setAllProfiles([]);
       setAdminUids([]);
       return;
@@ -242,7 +245,7 @@ function App() {
       unsubscribeProfiles();
       unsubscribeAdmins();
     };
-  }, [user, isAdmin]);
+  }, [user, isAdmin, profile.role]);
 
   useEffect(() => {
     if (!user || !db) {
@@ -797,7 +800,8 @@ function App() {
       const selectedBusiness = resolveDocumentBusiness(
         profile,
         form.issuerBusinessId || "own",
-        form.issuerBusinessSnapshot
+        form.issuerBusinessSnapshot,
+        allProfiles
       );
 
       const commonData = {
@@ -1215,6 +1219,7 @@ function App() {
         {view === "form" && (
           <JobForm
             profile={profile}
+            allProfiles={allProfiles}
             setProfile={setProfile}
             stampFile={stampFile}
             setStampFile={setStampFile}

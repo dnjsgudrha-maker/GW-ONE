@@ -31,6 +31,7 @@ function StepButton({ number, label, active, done, onClick }) {
 
 export default function JobForm({
   profile,
+  allProfiles,
   setProfile,
   stampFile,
   setStampFile,
@@ -68,7 +69,7 @@ export default function JobForm({
   const [step, setStep] = useState(1);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const businessOptions = getDocumentBusinesses(profile);
+  const businessOptions = getDocumentBusinesses(profile, allProfiles);
   const selectedBusiness =
     businessOptions.find(
       (business) => business.id === (form.issuerBusinessId || "own")
