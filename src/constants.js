@@ -60,6 +60,7 @@ export const createInitialForm = () => ({
   equipment: [],
   chargeAmount: "",
   baseChargeAmount: "",
+  materialCost: "",
   taxAddedPayment: "",
   commissionType: "percent",
   commissionRate: "30",

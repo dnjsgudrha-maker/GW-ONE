@@ -12,28 +12,40 @@ function Card({ label, value, emphasize }) {
   );
 }
 
-export default function MonthlySettlement({ jobs, onOpenJob }) {
+export default function MonthlySettlement({ jobs, role, onOpenJob }) {
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const summary = useMemo(() => summarizeMonth(jobs, month), [jobs, month]);
+  const canViewFull =
+    role === "대표" || role === "최고관리자";
 
   return (
     <section className="panel">
       <div className="panel-title settlement-title">
-        <h2>월별 정산</h2>
+        <div>
+          <h2>{canViewFull ? "월별 정산" : "내 작업 합계"}</h2>
+          {!canViewFull && (
+            <p className="settlement-role-guide">
+              본인이 작성한 작업의 금액과 자재비 합계만 표시됩니다.
+            </p>
+          )}
+        </div>
+
         <div className="settlement-title-actions">
-          <button
-            type="button"
-            className="csv-button"
-            onClick={() => downloadMonthlyCsv(summary, month)}
-            disabled={!summary.jobCount}
-          >
-            CSV 저장
-          </button>
+          {canViewFull && (
+            <button
+              type="button"
+              className="csv-button"
+              onClick={() => downloadMonthlyCsv(summary, month)}
+              disabled={!summary.jobCount}
+            >
+              CSV 저장
+            </button>
+          )}
           <input
-          className="month-picker"
-          type="month"
-          value={month}
-          onChange={(event) => setMonth(event.target.value)}
+            className="month-picker"
+            type="month"
+            value={month}
+            onChange={(event) => setMonth(event.target.value)}
           />
         </div>
       </div>
@@ -43,26 +55,53 @@ export default function MonthlySettlement({ jobs, onOpenJob }) {
         <strong>{summary.jobCount}건</strong>
       </div>
 
-      <div className="settlement-summary-grid">
-        <Card label="총 청구금액" value={summary.totalCharge} emphasize />
-        <Card label="현금" value={summary.cash} />
-        <Card label="계좌입금" value={summary.transfer} />
-        <Card label="카드" value={summary.card} />
-        <Card label="계산서 발행" value={summary.invoice} />
-        <Card label="결제 합계" value={summary.totalPaid} />
-      </div>
+      {canViewFull ? (
+        <>
+          <div className="settlement-summary-grid settlement-finance-grid">
+            <Card label="총 청구금액" value={summary.totalCharge} />
+            <Card label="원금 합계" value={summary.totalBaseCharge} />
+            <Card label="총 자재비" value={summary.totalMaterialCost} />
+            <Card
+              label="정산 기준"
+              value={summary.totalSettlementBase}
+              emphasize
+            />
+            <Card label="기사 지급 60%" value={summary.totalWorkerShare} />
+            <Card label="본사 수익 40%" value={summary.totalCompanyShare} />
+          </div>
 
-      <div className={summary.difference === 0 ? "settlement-balance match" : "settlement-balance mismatch"}>
-        <span>청구금액과 결제 합계 차이</span>
-        <strong>
-          {summary.difference === 0
-            ? "0원 · 모두 일치"
-            : `${summary.difference > 0 ? "부족" : "초과"} ${formatWon(Math.abs(summary.difference))}`}
-        </strong>
-      </div>
+          <div className="settlement-summary-grid">
+            <Card label="현금" value={summary.cash} />
+            <Card label="계좌입금" value={summary.transfer} />
+            <Card label="카드" value={summary.card} />
+            <Card label="계산서 발행" value={summary.invoice} />
+            <Card label="결제 합계" value={summary.totalPaid} />
+          </div>
+
+          <div className={
+            summary.difference === 0
+              ? "settlement-balance match"
+              : "settlement-balance mismatch"
+          }>
+            <span>청구금액과 결제 합계 차이</span>
+            <strong>
+              {summary.difference === 0
+                ? "0원 · 모두 일치"
+                : `${summary.difference > 0 ? "부족" : "초과"} ${formatWon(
+                    Math.abs(summary.difference)
+                  )}`}
+            </strong>
+          </div>
+        </>
+      ) : (
+        <div className="settlement-summary-grid worker-own-summary">
+          <Card label="내 작업금액 합계" value={summary.totalCharge} emphasize />
+          <Card label="내 자재비 합계" value={summary.totalMaterialCost} />
+        </div>
+      )}
 
       <div className="settlement-list">
-        <h3>작업별 내역</h3>
+        <h3>{canViewFull ? "작업별 정산 내역" : "내 작업 내역"}</h3>
 
         {summary.jobs.length === 0 ? (
           <div className="empty">선택한 달의 작업이 없습니다.</div>
@@ -70,30 +109,30 @@ export default function MonthlySettlement({ jobs, onOpenJob }) {
           summary.jobs.map((job) => (
             <article
               className="settlement-job-card"
-              key={job.id}
+              key={`${job.ownerUid || ""}-${job.id}`}
               onClick={() => onOpenJob(job)}
             >
               <div className="settlement-job-head">
                 <div>
                   <strong>{job.workDate} · {job.jobType}</strong>
                   <span>{job.address}</span>
+                  {canViewFull && job.worker && (
+                    <span>작업자 {job.worker}</span>
+                  )}
                 </div>
                 <strong>{formatWon(job.chargeAmount)}</strong>
               </div>
 
               <div className="settlement-payment-tags">
-                {job.paymentBreakdownResolved.cash > 0 && <span>현금 {formatWon(job.paymentBreakdownResolved.cash)}</span>}
-                {job.paymentBreakdownResolved.transfer > 0 && <span>계좌입금 {formatWon(job.paymentBreakdownResolved.transfer)}</span>}
-                {job.paymentBreakdownResolved.card > 0 && <span>카드 {formatWon(job.paymentBreakdownResolved.card)}</span>}
-                {job.paymentBreakdownResolved.invoice > 0 && <span>계산서 {formatWon(job.paymentBreakdownResolved.invoice)}</span>}
+                <span>자재비 {formatWon(job.materialCost)}</span>
+                {canViewFull && (
+                  <>
+                    <span>정산 기준 {formatWon(job.settlementBaseAmount)}</span>
+                    <span>기사 60% {formatWon(job.workerShareAmount)}</span>
+                    <span>본사 40% {formatWon(job.companyShareAmount)}</span>
+                  </>
+                )}
               </div>
-
-              {job.paymentDifferenceResolved !== 0 && (
-                <div className="settlement-difference">
-                  {job.paymentDifferenceResolved > 0 ? "부족" : "초과"}{" "}
-                  {formatWon(Math.abs(job.paymentDifferenceResolved))}
-                </div>
-              )}
             </article>
           ))
         )}

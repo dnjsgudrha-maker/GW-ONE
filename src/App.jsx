@@ -445,21 +445,28 @@ function App() {
 
   const chargeAmount =
     Number(String(form.chargeAmount).replace(/,/g, "")) || 0;
-  const commissionType = form.commissionType || "percent";
-  const commissionRate = Number(form.commissionRate) || 0;
-  const commissionFixedAmount =
-    Number(String(form.commissionFixedAmount || "").replace(/,/g, "")) || 0;
-  // 카드·세금계산서의 10% 추가금은 수수료 계산에서 제외합니다.
-  // 예: 원금 100,000원 + 카드 10% = 청구 110,000원
-  //     수수료 30%는 110,000원이 아닌 원금 100,000원의 30,000원
-  const commissionBaseAmount =
+  const baseChargeAmount =
     Number(String(form.baseChargeAmount || "").replace(/,/g, "")) ||
     chargeAmount;
-  const commissionAmount =
-    commissionType === "fixed"
-      ? commissionFixedAmount
-      : Math.round((commissionBaseAmount * commissionRate) / 100);
-  const netAmount = Math.max(chargeAmount - commissionAmount, 0);
+  const materialCost =
+    Number(String(form.materialCost || "").replace(/,/g, "")) || 0;
+  const settlementBaseAmount = Math.max(
+    baseChargeAmount - materialCost,
+    0
+  );
+  const workerShareAmount = Math.round(settlementBaseAmount * 0.6);
+  const companyShareAmount = Math.max(
+    settlementBaseAmount - workerShareAmount,
+    0
+  );
+
+  // 기존 데이터 호환용 필드입니다.
+  const commissionType = "percent";
+  const commissionRate = 40;
+  const commissionFixedAmount = 0;
+  const commissionBaseAmount = settlementBaseAmount;
+  const commissionAmount = companyShareAmount;
+  const netAmount = workerShareAmount;
   const paymentBreakdown = form.paymentBreakdown || {
     cash: "",
     transfer: "",
@@ -592,6 +599,7 @@ function App() {
       equipment: job.equipment || [],
       chargeAmount: String(job.chargeAmount || ""),
       baseChargeAmount: String(job.baseChargeAmount || job.chargeAmount || ""),
+      materialCost: String(job.materialCost || ""),
       taxAddedPayment: job.taxAddedPayment || "",
       commissionType:
         job.commissionType ||
@@ -656,6 +664,7 @@ function App() {
       equipment: job.equipment || [],
       chargeAmount: String(job.chargeAmount || ""),
       baseChargeAmount: String(job.baseChargeAmount || job.chargeAmount || ""),
+      materialCost: String(job.materialCost || ""),
       taxAddedPayment: job.taxAddedPayment || "",
       commissionType:
         job.commissionType ||
@@ -764,6 +773,10 @@ function App() {
         issuerBusinessId: selectedBusiness.id || "own",
         issuerBusinessSnapshot: selectedBusiness,
         chargeAmount,
+        materialCost,
+        settlementBaseAmount,
+        workerShareAmount,
+        companyShareAmount,
         commissionType,
         commissionRate,
         commissionBaseAmount,
@@ -862,6 +875,7 @@ function App() {
         ...createInitialForm(),
         worker: current.worker,
         baseChargeAmount: "",
+        materialCost: "",
         taxAddedPayment: "",
         commissionType: current.commissionType || "percent",
         commissionRate: current.commissionRate || "30",
@@ -1014,8 +1028,7 @@ function App() {
   );
 
   const currentRole = isAdmin ? "최고관리자" : profile.role || "기사";
-  const canViewSettlement =
-    currentRole === "최고관리자" || currentRole === "대표";
+  const canViewSettlement = true;
   const canManageUsers = currentRole === "최고관리자";
 
   const thisMonth = new Date().toISOString().slice(0, 7);
@@ -1117,9 +1130,11 @@ function App() {
             onBack={() => setView("list")}
             onNotice={setNotice}
             chargeAmount={chargeAmount}
-            commissionAmount={commissionAmount}
-            commissionBaseAmount={commissionBaseAmount}
-            netAmount={netAmount}
+            materialCost={materialCost}
+            settlementBaseAmount={settlementBaseAmount}
+            workerShareAmount={workerShareAmount}
+            companyShareAmount={companyShareAmount}
+            currentRole={currentRole}
             customerHistory={customerHistory}
             leakData={leakData}
             setLeakData={setLeakData}
@@ -1140,6 +1155,7 @@ function App() {
         {view === "settlement" && canViewSettlement && (
           <MonthlySettlement
             jobs={currentRole === "기사" ? jobs : allJobs}
+            role={currentRole}
             onOpenJob={setSelectedJob}
           />
         )}
@@ -1244,6 +1260,7 @@ function App() {
             isAdmin || (selectedJob.ownerUid || user.uid) === user.uid
           }
           isSuperAdmin={isAdmin}
+          currentRole={currentRole}
           onNotice={setNotice}
           onOpenDocument={setDocumentType}
           onEdit={() => startEditJob(selectedJob)}

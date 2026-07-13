@@ -3395,3 +3395,147 @@ button { cursor: pointer; }
 .cloud-photo-card.retrying {
   outline: 2px solid #2e90fa;
 }
+
+
+/* GW ONE v4.1 문서사진 + 자재비 + 6:4 정산 */
+
+.material-cost-box {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #f0cf9a;
+  border-radius: 14px;
+  background: #fffaf1;
+}
+
+.material-cost-box p {
+  margin: 0;
+  color: #8a5b10;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.settlement-preview-box {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.settlement-preview-box > div {
+  padding: 13px;
+  border: 1px solid #cfdcf0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.settlement-preview-box span,
+.settlement-preview-box strong,
+.settlement-preview-box small {
+  display: block;
+}
+
+.settlement-preview-box span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.settlement-preview-box strong {
+  margin-top: 5px;
+  color: #1261c9;
+  font-size: 18px;
+}
+
+.settlement-preview-box small {
+  margin-top: 4px;
+  color: #8a5b10;
+  font-size: 10px;
+}
+
+.settlement-role-guide {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+.settlement-finance-grid {
+  margin-bottom: 10px;
+}
+
+.worker-own-summary {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.document-photo-block {
+  margin-top: 20px;
+  page-break-inside: auto;
+}
+
+.document-photo-block > h2 {
+  margin: 0 0 12px;
+  padding-bottom: 7px;
+  border-bottom: 2px solid #1f2937;
+  font-size: 18px;
+}
+
+.doc-photo-section {
+  page-break-inside: avoid;
+}
+
+.doc-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.doc-photo-grid a {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border: 1px solid #d8dee8;
+  border-radius: 8px;
+  background: #f4f6f8;
+}
+
+.doc-photo-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.doc-photo-grid span {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, .72);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+@media (max-width: 620px) {
+  .settlement-preview-box {
+    grid-template-columns: 1fr;
+  }
+
+  .doc-photo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media print {
+  .doc-photo-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .doc-photo-grid a {
+    break-inside: avoid;
+  }
+}

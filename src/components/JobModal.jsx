@@ -47,9 +47,12 @@ export default function JobModal({
   onCopy,
   canEdit = true,
   canDelete = true,
-  isSuperAdmin = false
+  isSuperAdmin = false,
+  currentRole = "기사"
 }) {
   const paymentBreakdown = getPaymentBreakdown(job);
+  const canViewSettlement =
+    currentRole === "대표" || currentRole === "최고관리자";
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -75,19 +78,31 @@ export default function JobModal({
             value={job.equipment?.length ? job.equipment.join(", ") : "-"}
           />
           <Detail label="AS 기간" value={job.asPeriod || "-"} />
-          <Detail label="청구금액" value={formatWon(job.chargeAmount)} />
-          <Detail
-            label="수수료"
-            value={
-              job.commissionType === "fixed" ||
-              Number(job.commissionFixedAmount || 0) > 0
-                ? `금액 직접 입력 · ${formatWon(job.commissionAmount)}`
-                : `${job.commissionRate || 0}% · ${formatWon(
-                    job.commissionAmount
-                  )}`
-            }
-          />
-          <Detail label="실수령액" value={formatWon(job.netAmount)} />
+          <Detail label="작업금액" value={formatWon(job.chargeAmount)} />
+          <Detail label="자재비" value={formatWon(job.materialCost)} />
+          {canViewSettlement && (
+            <>
+              <Detail
+                label="정산 기준"
+                value={formatWon(
+                  job.settlementBaseAmount ??
+                    Math.max(
+                      Number(job.baseChargeAmount || job.chargeAmount || 0) -
+                        Number(job.materialCost || 0),
+                      0
+                    )
+                )}
+              />
+              <Detail
+                label="기사 몫 60%"
+                value={formatWon(job.workerShareAmount || 0)}
+              />
+              <Detail
+                label="본사 몫 40%"
+                value={formatWon(job.companyShareAmount || 0)}
+              />
+            </>
+          )}
           <Detail
             label="결제내역"
             value={[

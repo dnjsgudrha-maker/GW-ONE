@@ -22,7 +22,6 @@ const QUICK_AMOUNTS = [
   ["100만", 1000000]
 ];
 
-const QUICK_RATES = ["10", "15", "20", "25", "30", "40"];
 const TAX_KEYS = new Set(["card", "invoice"]);
 
 function roundedTaxIncluded(amount) {
@@ -33,9 +32,11 @@ export default function PaymentBox({
   form,
   setForm,
   chargeAmount,
-  commissionAmount,
-  commissionBaseAmount,
-  netAmount
+  materialCost,
+  settlementBaseAmount,
+  workerShareAmount,
+  companyShareAmount,
+  currentRole
 }) {
   const payment = form.paymentBreakdown || {
     cash: "",
@@ -44,13 +45,13 @@ export default function PaymentBox({
     invoice: ""
   };
 
-  const commissionType = form.commissionType || "percent";
+  const canViewSettlement =
+    currentRole === "대표" || currentRole === "최고관리자";
 
   const paymentTotal = FIELDS.reduce(
     (sum, [key]) => sum + numberValue(payment[key]),
     0
   );
-
   const difference = chargeAmount - paymentTotal;
 
   const getBaseAmount = () => {
@@ -77,8 +78,6 @@ export default function PaymentBox({
     });
   };
 
-  // 버튼은 교체가 아니라 계속 더해집니다.
-  // 예: 10만 + 5만 = 15만, 10만 + 10만 = 20만
   const addChargeAmount = (amount) => {
     const base = getBaseAmount();
     const nextBase = base + amount;
@@ -119,6 +118,7 @@ export default function PaymentBox({
       ...form,
       chargeAmount: "",
       baseChargeAmount: "",
+      materialCost: "",
       taxAddedPayment: "",
       paymentBreakdown: {
         cash: "",
@@ -156,22 +156,11 @@ export default function PaymentBox({
     });
   };
 
-  const setCommissionType = (type) => {
-    setForm({
-      ...form,
-      commissionType: type,
-      commissionFixedAmount:
-        type === "fixed" ? form.commissionFixedAmount || "" : "",
-      commissionRate:
-        type === "percent" ? form.commissionRate || "30" : form.commissionRate
-    });
-  };
-
   return (
     <div className="form-section easy-payment-section">
       <h3>금액 입력</h3>
 
-      <Field label="청구금액">
+      <Field label="작업금액">
         <input
           className="easy-large-input payment-main-input"
           inputMode="numeric"
@@ -210,115 +199,50 @@ export default function PaymentBox({
         <strong>{formatWon(chargeAmount)}</strong>
       </div>
 
-      <div className="commission-box">
-        <div className="commission-box-head">
-          <strong>수수료 입력</strong>
-          <span>요율 또는 금액 중 하나를 선택하세요.</span>
-        </div>
-
-        <div className="commission-type-toggle">
-          <button
-            type="button"
-            className={commissionType === "percent" ? "active" : ""}
-            onClick={() => setCommissionType("percent")}
-          >
-            % 요율로 계산
-          </button>
-          <button
-            type="button"
-            className={commissionType === "fixed" ? "active" : ""}
-            onClick={() => setCommissionType("fixed")}
-          >
-            금액 직접 입력
-          </button>
-        </div>
-
-        {commissionType === "percent" ? (
-          <>
-            <div className="commission-rate-row">
-              {QUICK_RATES.map((rate) => (
-                <button
-                  type="button"
-                  key={rate}
-                  className={
-                    String(form.commissionRate) === rate ? "active" : ""
-                  }
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      commissionType: "percent",
-                      commissionRate: rate
-                    })
-                  }
-                >
-                  {rate}%
-                </button>
-              ))}
-            </div>
-
-            <Field label="다른 요율 직접 입력">
-              <div className="commission-custom-input">
-                <input
-                  inputMode="decimal"
-                  value={form.commissionRate || ""}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      commissionType: "percent",
-                      commissionRate: event.target.value.replace(/[^\d.]/g, "")
-                    })
-                  }
-                  placeholder="예: 17.5"
-                />
-                <span>%</span>
-              </div>
-            </Field>
-          </>
-        ) : (
-          <Field label="수수료 금액">
-            <input
-              className="easy-large-input"
-              inputMode="numeric"
-              value={formatNumericInput(form.commissionFixedAmount)}
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  commissionType: "fixed",
-                  commissionFixedAmount: rawNumericValue(event.target.value)
-                })
-              }
-              placeholder="예: 45,000"
-            />
-          </Field>
-        )}
-
-        <div className="commission-base-guide">
-          <span>수수료 계산 기준</span>
-          <strong>{formatWon(commissionBaseAmount)}</strong>
-          {chargeAmount !== commissionBaseAmount && (
-            <small>
-              카드·세금계산서 10% 추가금은 수수료 계산에서 제외
-            </small>
-          )}
-        </div>
-
-        <div className="commission-result-grid">
-          <div>
-            <span>수수료</span>
-            <strong>{formatWon(commissionAmount)}</strong>
-          </div>
-          <div>
-            <span>정산금액</span>
-            <strong>{formatWon(netAmount)}</strong>
-          </div>
-        </div>
+      <div className="material-cost-box">
+        <Field label="자재비">
+          <input
+            className="easy-large-input"
+            inputMode="numeric"
+            value={formatNumericInput(form.materialCost || "")}
+            onChange={(event) =>
+              setForm({
+                ...form,
+                materialCost: rawNumericValue(event.target.value)
+              })
+            }
+            placeholder="사용한 자재비만 입력"
+          />
+        </Field>
+        <p>
+          수수료와 6:4 정산은 카드·세금계산서 10%를 제외한 원금에서
+          자재비를 뺀 금액을 기준으로 계산합니다.
+        </p>
       </div>
+
+      {canViewSettlement && (
+        <div className="settlement-preview-box">
+          <div>
+            <span>정산 기준</span>
+            <strong>{formatWon(settlementBaseAmount)}</strong>
+            <small>원금 - 자재비</small>
+          </div>
+          <div>
+            <span>기사 몫 60%</span>
+            <strong>{formatWon(workerShareAmount)}</strong>
+          </div>
+          <div>
+            <span>본사 몫 40%</span>
+            <strong>{formatWon(companyShareAmount)}</strong>
+          </div>
+        </div>
+      )}
 
       <div className="split-payment-box">
         <div className="easy-payment-guide">
           <strong>어떻게 받았나요?</strong>
           <span>
-            현금·계좌입금은 원래 금액으로 입력됩니다.
+            현금·계좌입금은 원금 그대로 입력됩니다.
             카드·세금계산서의 ‘전액’을 누르면 10%가 자동으로 추가됩니다.
           </span>
         </div>

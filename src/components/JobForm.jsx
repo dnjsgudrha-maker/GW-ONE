@@ -49,9 +49,11 @@ export default function JobForm({
   onBack,
   onNotice,
   chargeAmount,
-  commissionAmount,
-  commissionBaseAmount,
-  netAmount,
+  materialCost,
+  settlementBaseAmount,
+  workerShareAmount,
+  companyShareAmount,
+  currentRole,
   customerHistory,
   leakData,
   setLeakData,
@@ -71,6 +73,9 @@ export default function JobForm({
     ) ||
     form.issuerBusinessSnapshot ||
     businessOptions[0];
+
+  const canViewSettlement =
+    currentRole === "대표" || currentRole === "최고관리자";
 
   useEffect(() => {
     localStorage.setItem("gw-one-easy-mode", easyMode ? "on" : "off");
@@ -523,9 +528,11 @@ export default function JobForm({
               form={form}
               setForm={setForm}
               chargeAmount={chargeAmount}
-              commissionAmount={commissionAmount}
-              commissionBaseAmount={commissionBaseAmount}
-              netAmount={netAmount}
+              materialCost={materialCost}
+              settlementBaseAmount={settlementBaseAmount}
+              workerShareAmount={workerShareAmount}
+              companyShareAmount={companyShareAmount}
+              currentRole={currentRole}
             />
 
 
@@ -615,9 +622,29 @@ export default function JobForm({
                 <strong>{selectedBusiness?.businessNumber || "미입력"}</strong>
               </div>
               <div>
-                <span>금액</span>
+                <span>작업금액</span>
                 <strong>{formatWon(chargeAmount)}</strong>
               </div>
+              <div>
+                <span>자재비</span>
+                <strong>{formatWon(materialCost)}</strong>
+              </div>
+              {canViewSettlement && (
+                <>
+                  <div>
+                    <span>정산 기준</span>
+                    <strong>{formatWon(settlementBaseAmount)}</strong>
+                  </div>
+                  <div>
+                    <span>기사 60%</span>
+                    <strong>{formatWon(workerShareAmount)}</strong>
+                  </div>
+                  <div>
+                    <span>본사 40%</span>
+                    <strong>{formatWon(companyShareAmount)}</strong>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -734,13 +761,25 @@ export default function JobForm({
                   <strong>{formatWon(chargeAmount)}</strong>
                 </div>
                 <div>
-                  <span>수수료</span>
-                  <strong>{formatWon(commissionAmount)}</strong>
+                  <span>자재비</span>
+                  <strong>{formatWon(materialCost)}</strong>
                 </div>
-                <div>
-                  <span>정산금액</span>
-                  <strong>{formatWon(netAmount)}</strong>
-                </div>
+                {canViewSettlement && (
+                  <>
+                    <div>
+                      <span>정산 기준</span>
+                      <strong>{formatWon(settlementBaseAmount)}</strong>
+                    </div>
+                    <div>
+                      <span>기사 60%</span>
+                      <strong>{formatWon(workerShareAmount)}</strong>
+                    </div>
+                    <div>
+                      <span>본사 40%</span>
+                      <strong>{formatWon(companyShareAmount)}</strong>
+                    </div>
+                  </>
+                )}
                 <div>
                   <span>받은 금액</span>
                   <strong>{formatWon(paymentTotal)}</strong>

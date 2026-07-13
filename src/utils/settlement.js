@@ -23,33 +23,74 @@ export function getPaymentBreakdown(job) {
   };
 }
 
+export function resolveSettlement(job) {
+  const chargeAmount = numberValue(job?.chargeAmount);
+  const baseChargeAmount =
+    numberValue(job?.baseChargeAmount) || chargeAmount;
+  const materialCost = numberValue(job?.materialCost);
+  const settlementBaseAmount =
+    numberValue(job?.settlementBaseAmount) ||
+    Math.max(baseChargeAmount - materialCost, 0);
+  const workerShareAmount =
+    numberValue(job?.workerShareAmount) ||
+    Math.round(settlementBaseAmount * 0.6);
+  const companyShareAmount =
+    numberValue(job?.companyShareAmount) ||
+    Math.max(settlementBaseAmount - workerShareAmount, 0);
+
+  return {
+    chargeAmount,
+    baseChargeAmount,
+    materialCost,
+    settlementBaseAmount,
+    workerShareAmount,
+    companyShareAmount
+  };
+}
+
 export function summarizeMonth(jobs, month) {
   return jobs
     .filter((job) => String(job.workDate || "").startsWith(month))
     .reduce(
       (summary, job) => {
         const payment = getPaymentBreakdown(job);
-        const charge = numberValue(job.chargeAmount);
-        const paid = payment.cash + payment.transfer + payment.card + payment.invoice;
+        const settlement = resolveSettlement(job);
+        const paid =
+          payment.cash +
+          payment.transfer +
+          payment.card +
+          payment.invoice;
 
         summary.jobCount += 1;
-        summary.totalCharge += charge;
+        summary.totalCharge += settlement.chargeAmount;
+        summary.totalBaseCharge += settlement.baseChargeAmount;
+        summary.totalMaterialCost += settlement.materialCost;
+        summary.totalSettlementBase += settlement.settlementBaseAmount;
+        summary.totalWorkerShare += settlement.workerShareAmount;
+        summary.totalCompanyShare += settlement.companyShareAmount;
         summary.cash += payment.cash;
         summary.transfer += payment.transfer;
         summary.card += payment.card;
         summary.invoice += payment.invoice;
         summary.totalPaid += paid;
-        summary.difference += charge - paid;
+        summary.difference += settlement.chargeAmount - paid;
         summary.jobs.push({
           ...job,
+          ...settlement,
           paymentBreakdownResolved: payment,
-          paymentDifferenceResolved: charge - paid
+          paymentDifferenceResolved: settlement.chargeAmount - paid
         });
+
         return summary;
       },
       {
         jobCount: 0,
         totalCharge: 0,
+        totalBaseCharge: 0,
+        totalMaterialCost: 0,
+        totalSettlementBase: 0,
+        totalWorkerShare: 0,
+        totalCompanyShare: 0,
         cash: 0,
         transfer: 0,
         card: 0,
