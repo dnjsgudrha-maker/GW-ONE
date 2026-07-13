@@ -633,22 +633,7 @@ export default function JobForm({
                 <span>자재비</span>
                 <strong>{formatWon(materialCost)}</strong>
               </div>
-              {canViewSettlement && (
-                <>
-                  <div>
-                    <span>정산 기준</span>
-                    <strong>{formatWon(settlementBaseAmount)}</strong>
-                  </div>
-                  <div>
-                    <span>기사 {workerRatio}%</span>
-                    <strong>{formatWon(workerShareAmount)}</strong>
-                  </div>
-                  <div>
-                    <span>본사 {companyRatio}%</span>
-                    <strong>{formatWon(companyShareAmount)}</strong>
-                  </div>
-                </>
-              )}
+
             </div>
           </div>
         )}
@@ -768,22 +753,7 @@ export default function JobForm({
                   <span>자재비</span>
                   <strong>{formatWon(materialCost)}</strong>
                 </div>
-                {canViewSettlement && (
-                  <>
-                    <div>
-                      <span>정산 기준</span>
-                      <strong>{formatWon(settlementBaseAmount)}</strong>
-                    </div>
-                    <div>
-                      <span>기사 {workerRatio}%</span>
-                      <strong>{formatWon(workerShareAmount)}</strong>
-                    </div>
-                    <div>
-                      <span>본사 {companyRatio}%</span>
-                      <strong>{formatWon(companyShareAmount)}</strong>
-                    </div>
-                  </>
-                )}
+
                 <div>
                   <span>받은 금액</span>
                   <strong>{formatWon(paymentTotal)}</strong>

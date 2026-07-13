@@ -222,24 +222,6 @@ export default function PaymentBox({
         </p>
       </div>
 
-      {canViewSettlement && (
-        <div className="settlement-preview-box">
-          <div>
-            <span>정산 기준</span>
-            <strong>{formatWon(settlementBaseAmount)}</strong>
-            <small>원금 - 자재비</small>
-          </div>
-          <div>
-            <span>기사 몫 {workerRatio}%</span>
-            <strong>{formatWon(workerShareAmount)}</strong>
-          </div>
-          <div>
-            <span>본사 몫 {companyRatio}%</span>
-            <strong>{formatWon(companyShareAmount)}</strong>
-          </div>
-        </div>
-      )}
-
       <div className="split-payment-box">
         <div className="easy-payment-guide">
           <strong>어떻게 받았나요?</strong>
