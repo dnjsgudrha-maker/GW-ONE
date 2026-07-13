@@ -1268,14 +1268,18 @@ function App() {
         {view === "users" && canManageUsers && (
           <UserManagement
             profiles={allProfiles}
-            currentUid={user.uid}
+            currentUserUid={user.uid}
             adminUids={adminUids}
             onApprove={approveUser}
-            onDisable={disableUser}
-            onEnable={enableUser}
-            onMakeAdmin={makeAdmin}
-            onRemoveAdmin={removeAdmin}
-            onChangeRole={changeUserRole}
+            onDisable={(uid, shouldDisable) =>
+              shouldDisable ? disableUser(uid) : enableUser(uid)
+            }
+            onRoleChange={changeUserRole}
+            onAdminToggle={(uid, makeAdminValue) =>
+              makeAdminValue ? makeAdmin(uid) : removeAdmin(uid)
+            }
+            onSaveRatio={handleSaveWorkerRatio}
+            onCreateWorker={handleCreateWorker}
           />
         )}
 

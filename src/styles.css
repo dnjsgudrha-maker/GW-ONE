@@ -3699,42 +3699,45 @@ button { cursor: pointer; }
   }
 }
 
-/* GW ONE v4.2.1 저장 확인창 모바일 스크롤 FIX */
+
+/* GW ONE v4.2.2 저장 확인창 모바일 스크롤 안정화 */
 .save-confirm-backdrop {
   overflow-y: auto !important;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  place-items: start center !important;
-  padding-top: max(12px, env(safe-area-inset-top)) !important;
-  padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+  align-items: flex-start !important;
+  padding:
+    max(12px, env(safe-area-inset-top))
+    12px
+    calc(100px + env(safe-area-inset-bottom)) !important;
 }
 
 .save-confirm-card {
-  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+  width: min(620px, 100%) !important;
+  max-height: calc(
+    100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+  ) !important;
+  margin: 0 auto !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  margin: 0 auto !important;
 }
 
 .save-confirm-actions {
   position: sticky;
   bottom: 0;
-  z-index: 5;
-  padding-top: 18px;
-  padding-bottom: max(8px, env(safe-area-inset-bottom));
-  background: linear-gradient(to bottom, rgba(255,255,255,0), #fff 22px);
+  z-index: 10;
+  padding-top: 18px !important;
+  padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    #fff 22px
+  );
 }
 
-@media (max-width: 480px) {
-  .save-confirm-backdrop {
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-  }
-
+@media (max-width: 640px) {
   .save-confirm-card {
-    width: 100% !important;
-    padding: 18px !important;
     border-radius: 24px !important;
   }
 }
