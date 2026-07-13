@@ -34,6 +34,8 @@ export default function PaymentBox({
   chargeAmount,
   materialCost,
   settlementBaseAmount,
+  workerRatio,
+  companyRatio,
   workerShareAmount,
   companyShareAmount,
   currentRole
@@ -228,11 +230,11 @@ export default function PaymentBox({
             <small>원금 - 자재비</small>
           </div>
           <div>
-            <span>기사 몫 60%</span>
+            <span>기사 몫 {workerRatio}%</span>
             <strong>{formatWon(workerShareAmount)}</strong>
           </div>
           <div>
-            <span>본사 몫 40%</span>
+            <span>본사 몫 {companyRatio}%</span>
             <strong>{formatWon(companyShareAmount)}</strong>
           </div>
         </div>

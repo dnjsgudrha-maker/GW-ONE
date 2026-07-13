@@ -191,9 +191,10 @@ export default function ProfileBox({
 
         <div className="document-business-manager">
           <div className="business-section-label">
-            <strong>문서용 다른 사업자</strong>
+            <strong>상호 관리</strong>
             <span>
-              작업 수입은 내 계정으로 유지되고, 문서에 표시되는 상호만 바뀝니다.
+              필요한 상호를 계속 추가할 수 있습니다. 작업 작성 시 선택하면
+              사업자번호·대표자·직인이 자동으로 적용됩니다.
             </span>
           </div>
 
@@ -228,7 +229,7 @@ export default function ProfileBox({
             className="secondary business-add-toggle"
             onClick={() => setShowBusinessAdd((current) => !current)}
           >
-            {showBusinessAdd ? "추가 취소" : "문서용 사업자 추가"}
+            {showBusinessAdd ? "추가 취소" : "+ 상호 추가"}
           </button>
 
           {showBusinessAdd && (

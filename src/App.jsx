@@ -18,7 +18,9 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  updateDoc
+  updateDoc,
+  where,
+  getDocs
 } from "firebase/firestore";
 import {
   auth,
@@ -147,19 +149,42 @@ function App() {
             ...snapshot.data()
           });
         } else {
+          const normalizedEmail = String(user.email || "").toLowerCase();
+          const pendingQuery = query(
+            collection(db, "pendingWorkers"),
+            where("email", "==", normalizedEmail)
+          );
+          const pendingSnapshot = await getDocs(pendingQuery);
+          const pendingData = pendingSnapshot.empty
+            ? null
+            : pendingSnapshot.docs[0].data();
+
           const newProfile = {
             ...initialProfile,
+            ...(pendingData || {}),
             uid: user.uid,
             email: user.email || "",
-            representativeName: user.displayName || "",
-            approved: false,
-            disabled: false,
-            role: "기사",
+            representativeName:
+              pendingData?.representativeName ||
+              user.displayName ||
+              "",
+            approved: pendingData ? true : false,
+            disabled: pendingData?.disabled || false,
+            role: pendingData?.role || "기사",
+            workerRatio: Number(pendingData?.workerRatio ?? 60),
+            companyRatio: Number(pendingData?.companyRatio ?? 40),
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           };
 
           await setDoc(profileRef, newProfile);
+
+          if (!pendingSnapshot.empty) {
+            await deleteDoc(
+              doc(db, "pendingWorkers", pendingSnapshot.docs[0].id)
+            );
+          }
+
           setProfile(newProfile);
         }
 
@@ -454,7 +479,14 @@ function App() {
     baseChargeAmount - materialCost,
     0
   );
-  const workerShareAmount = Math.round(settlementBaseAmount * 0.6);
+  const currentWorkerRatio = Math.min(
+    100,
+    Math.max(0, Number(profile.workerRatio ?? 60))
+  );
+  const currentCompanyRatio = 100 - currentWorkerRatio;
+  const workerShareAmount = Math.round(
+    settlementBaseAmount * (currentWorkerRatio / 100)
+  );
   const companyShareAmount = Math.max(
     settlementBaseAmount - workerShareAmount,
     0
@@ -462,7 +494,7 @@ function App() {
 
   // 기존 데이터 호환용 필드입니다.
   const commissionType = "percent";
-  const commissionRate = 40;
+  const commissionRate = currentCompanyRatio;
   const commissionFixedAmount = 0;
   const commissionBaseAmount = settlementBaseAmount;
   const commissionAmount = companyShareAmount;
@@ -775,6 +807,8 @@ function App() {
         chargeAmount,
         materialCost,
         settlementBaseAmount,
+        workerRatio: currentWorkerRatio,
+        companyRatio: currentCompanyRatio,
         workerShareAmount,
         companyShareAmount,
         commissionType,
@@ -1027,6 +1061,75 @@ function App() {
     form.address
   );
 
+
+  const handleSaveWorkerRatio = async (
+    targetUid,
+    workerRatio,
+    companyRatio
+  ) => {
+    if (!isAdmin && profile.role !== "대표") {
+      setNotice("정산비율은 최고관리자 또는 대표만 변경할 수 있습니다.");
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, "profiles", targetUid), {
+        workerRatio,
+        companyRatio,
+        updatedAt: serverTimestamp()
+      });
+      setNotice(`정산비율을 기사 ${workerRatio}% / 본사 ${companyRatio}%로 저장했습니다.`);
+    } catch (error) {
+      setNotice(`정산비율을 저장하지 못했습니다: ${error.message}`);
+    }
+  };
+
+  const handleCreateWorker = async (workerData) => {
+    if (!isAdmin && profile.role !== "대표") {
+      setNotice("작업자 추가는 최고관리자 또는 대표만 가능합니다.");
+      return;
+    }
+
+    try {
+      const email = workerData.email.trim().toLowerCase();
+      const existing = allProfiles.find(
+        (item) => String(item.email || "").toLowerCase() === email
+      );
+
+      if (existing?.uid) {
+        await updateDoc(doc(db, "profiles", existing.uid), {
+          representativeName: workerData.representativeName.trim(),
+          email,
+          contact: workerData.contact?.trim() || "",
+          businessName: workerData.businessName?.trim() || "",
+          businessNumber: workerData.businessNumber?.trim() || "",
+          role: workerData.role || "기사",
+          workerRatio: workerData.workerRatio,
+          companyRatio: workerData.companyRatio,
+          approved: true,
+          disabled: false,
+          updatedAt: serverTimestamp()
+        });
+        setNotice("기존 작업자 정보를 업데이트했습니다.");
+        return;
+      }
+
+      const pendingId = `pending-${Date.now()}`;
+      await setDoc(doc(db, "pendingWorkers", pendingId), {
+        ...workerData,
+        email,
+        approved: true,
+        disabled: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      setNotice("작업자를 등록했습니다. 해당 이메일로 처음 로그인하면 자동 연결됩니다.");
+    } catch (error) {
+      setNotice(`작업자를 등록하지 못했습니다: ${error.message}`);
+    }
+  };
+
   const currentRole = isAdmin ? "최고관리자" : profile.role || "기사";
   const canViewSettlement = true;
   const canManageUsers = currentRole === "최고관리자";
@@ -1132,6 +1235,8 @@ function App() {
             chargeAmount={chargeAmount}
             materialCost={materialCost}
             settlementBaseAmount={settlementBaseAmount}
+            workerRatio={currentWorkerRatio}
+            companyRatio={currentCompanyRatio}
             workerShareAmount={workerShareAmount}
             companyShareAmount={companyShareAmount}
             currentRole={currentRole}

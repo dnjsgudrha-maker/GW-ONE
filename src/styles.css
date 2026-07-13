@@ -3539,3 +3539,202 @@ button { cursor: pointer; }
     break-inside: avoid;
   }
 }
+
+
+/* GW ONE v4.2 작업자·상호·비율 관리 */
+
+.user-management-title {
+  align-items: flex-start;
+}
+
+.user-management-title p {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+.compact-button {
+  min-height: 42px;
+  padding: 9px 14px;
+}
+
+.worker-add-card {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 2px solid #b8d3f2;
+  border-radius: 16px;
+  background: #f5f9ff;
+}
+
+.worker-add-card label {
+  display: grid;
+  gap: 6px;
+}
+
+.worker-add-card label span {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.worker-add-guide {
+  margin: 0;
+  color: #52677f;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.user-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.user-card-grid > div {
+  padding: 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.user-card-grid span,
+.user-card-grid strong {
+  display: block;
+}
+
+.user-card-grid span {
+  color: #667085;
+  font-size: 11px;
+}
+
+.user-card-grid strong {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.ratio-management-card {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 13px;
+  border: 1px solid #d7c8f2;
+  border-radius: 13px;
+  background: #fbf8ff;
+}
+
+.ratio-management-head strong,
+.ratio-management-head span {
+  display: block;
+}
+
+.ratio-management-head span {
+  margin-top: 4px;
+  color: #6f5a8e;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.ratio-editor {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.ratio-editor > div {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.ratio-editor span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.ratio-editor strong {
+  color: #6941c6;
+  font-size: 20px;
+}
+
+.ratio-input-box {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.ratio-input-box input {
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.ratio-input-box span {
+  color: #344054;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.ratio-save-button {
+  min-height: 40px;
+}
+
+.add-worker-ratio {
+  margin-top: 2px;
+}
+
+@media (max-width: 560px) {
+  .user-management-title {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .user-card-grid,
+  .ratio-editor {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* GW ONE v4.2.1 저장 확인창 모바일 스크롤 FIX */
+.save-confirm-backdrop {
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  place-items: start center !important;
+  padding-top: max(12px, env(safe-area-inset-top)) !important;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+}
+
+.save-confirm-card {
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  margin: 0 auto !important;
+}
+
+.save-confirm-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  padding-top: 18px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, rgba(255,255,255,0), #fff 22px);
+}
+
+@media (max-width: 480px) {
+  .save-confirm-backdrop {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .save-confirm-card {
+    width: 100% !important;
+    padding: 18px !important;
+    border-radius: 24px !important;
+  }
+}

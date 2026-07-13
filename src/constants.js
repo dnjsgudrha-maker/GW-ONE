@@ -39,7 +39,9 @@ export const initialProfile = {
   businessAddress: "",
   stampDataUrl: "",
   stampUrl: "",
-  documentBusinesses: []
+  documentBusinesses: [],
+  workerRatio: 60,
+  companyRatio: 40
 };
 
 export const createInitialForm = () => ({

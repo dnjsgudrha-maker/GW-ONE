@@ -51,6 +51,8 @@ export default function JobForm({
   chargeAmount,
   materialCost,
   settlementBaseAmount,
+  workerRatio,
+  companyRatio,
   workerShareAmount,
   companyShareAmount,
   currentRole,
@@ -530,6 +532,8 @@ export default function JobForm({
               chargeAmount={chargeAmount}
               materialCost={materialCost}
               settlementBaseAmount={settlementBaseAmount}
+              workerRatio={workerRatio}
+              companyRatio={companyRatio}
               workerShareAmount={workerShareAmount}
               companyShareAmount={companyShareAmount}
               currentRole={currentRole}
@@ -636,11 +640,11 @@ export default function JobForm({
                     <strong>{formatWon(settlementBaseAmount)}</strong>
                   </div>
                   <div>
-                    <span>기사 60%</span>
+                    <span>기사 {workerRatio}%</span>
                     <strong>{formatWon(workerShareAmount)}</strong>
                   </div>
                   <div>
-                    <span>본사 40%</span>
+                    <span>본사 {companyRatio}%</span>
                     <strong>{formatWon(companyShareAmount)}</strong>
                   </div>
                 </>
@@ -771,11 +775,11 @@ export default function JobForm({
                       <strong>{formatWon(settlementBaseAmount)}</strong>
                     </div>
                     <div>
-                      <span>기사 60%</span>
+                      <span>기사 {workerRatio}%</span>
                       <strong>{formatWon(workerShareAmount)}</strong>
                     </div>
                     <div>
-                      <span>본사 40%</span>
+                      <span>본사 {companyRatio}%</span>
                       <strong>{formatWon(companyShareAmount)}</strong>
                     </div>
                   </>
