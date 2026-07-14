@@ -3872,3 +3872,84 @@ button { cursor: pointer; }
 .photo-upload-done {
   right: 7px;
 }
+
+
+/* GW ONE v4.3.6 작업별 수수료·실수령 */
+.commission-box {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #d7c8f2;
+  border-radius: 14px;
+  background: #fbf8ff;
+}
+
+.commission-input-with-unit {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.commission-input-with-unit span {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.commission-result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.commission-result-grid > div {
+  padding: 12px;
+  border: 1px solid #e0d7f2;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.commission-result-grid span,
+.commission-result-grid strong,
+.commission-result-grid small {
+  display: block;
+}
+
+.commission-result-grid span {
+  color: #667085;
+  font-size: 11px;
+}
+
+.commission-result-grid strong {
+  margin-top: 5px;
+  color: #6941c6;
+  font-size: 17px;
+}
+
+.commission-result-grid small {
+  margin-top: 4px;
+  color: #7f6a9e;
+  font-size: 10px;
+}
+
+.commission-result-grid .net-amount-result {
+  border-color: #9fd7b9;
+  background: #f2fff7;
+}
+
+.commission-result-grid .net-amount-result strong {
+  color: #12874f;
+}
+
+.commission-guide {
+  margin: 0;
+  color: #6f5a8e;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+@media (max-width: 620px) {
+  .commission-result-grid {
+    grid-template-columns: 1fr;
+  }
+}

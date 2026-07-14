@@ -78,6 +78,19 @@ export default function JobModal({
           <Detail label="작업금액" value={formatWon(job.chargeAmount)} />
           <Detail label="자재비" value={formatWon(job.materialCost)} />
           <Detail
+            label="수수료"
+            value={
+              job.commissionType === "none"
+                ? "없음"
+                : job.commissionType === "fixed"
+                  ? `${formatWon(job.commissionAmount)} · 금액입력`
+                  : `${job.commissionRate || 0}% · ${formatWon(
+                      job.commissionAmount
+                    )}`
+            }
+          />
+          <Detail label="실수령금액" value={formatWon(job.netAmount)} />
+          <Detail
             label="결제내역"
             value={[
               paymentBreakdown.cash > 0 ? `현금 ${formatWon(paymentBreakdown.cash)}` : "",
@@ -118,20 +131,6 @@ export default function JobModal({
             }}
           >
             📞 전화
-          </button>
-          <button
-            type="button"
-            disabled={!job.address}
-            onClick={() =>
-              window.open(
-                `https://map.tmap.co.kr/route?goalname=${encodeURIComponent(
-                  job.address
-                )}`,
-                "_blank"
-              )
-            }
-          >
-            🧭 티맵
           </button>
           <button type="button" onClick={onCopy}>
             📋 이전 작업 복사

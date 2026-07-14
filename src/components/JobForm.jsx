@@ -54,6 +54,9 @@ export default function JobForm({
   onNotice,
   chargeAmount,
   materialCost,
+  commissionBaseAmount,
+  commissionAmount,
+  netAmount,
   currentRole,
   customerHistory,
   leakData,
@@ -543,6 +546,9 @@ export default function JobForm({
               setForm={setForm}
               chargeAmount={chargeAmount}
               materialCost={materialCost}
+              commissionBaseAmount={commissionBaseAmount}
+              commissionAmount={commissionAmount}
+              netAmount={netAmount}
             />
 
 
@@ -639,7 +645,14 @@ export default function JobForm({
                 <span>자재비</span>
                 <strong>{formatWon(materialCost)}</strong>
               </div>
-
+              <div>
+                <span>수수료</span>
+                <strong>{formatWon(commissionAmount)}</strong>
+              </div>
+              <div>
+                <span>실수령금액</span>
+                <strong>{formatWon(netAmount)}</strong>
+              </div>
             </div>
           </div>
         )}
@@ -759,7 +772,14 @@ export default function JobForm({
                   <span>자재비</span>
                   <strong>{formatWon(materialCost)}</strong>
                 </div>
-
+                <div>
+                  <span>수수료</span>
+                  <strong>{formatWon(commissionAmount)}</strong>
+                </div>
+                <div>
+                  <span>실수령금액</span>
+                  <strong>{formatWon(netAmount)}</strong>
+                </div>
                 <div>
                   <span>받은 금액</span>
                   <strong>{formatWon(paymentTotal)}</strong>

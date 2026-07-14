@@ -497,7 +497,23 @@ function App() {
     chargeAmount;
   const materialCost =
     Number(String(form.materialCost || "").replace(/,/g, "")) || 0;
-  // 6:4 정산 기능은 제거했습니다. 자재비는 기록용으로만 저장합니다.
+  const commissionType = form.commissionType || "percent";
+  const commissionRate =
+    Number(String(form.commissionRate || "").replace(/,/g, "")) || 0;
+  const commissionFixedAmount =
+    Number(String(form.commissionFixedAmount || "").replace(/,/g, "")) || 0;
+  // 카드·세금계산서의 10% 추가금은 제외하고 원금에서 자재비를 뺀 금액을 기준으로 합니다.
+  const commissionBaseAmount = Math.max(baseChargeAmount - materialCost, 0);
+  const commissionAmount =
+    commissionType === "none"
+      ? 0
+      : commissionType === "fixed"
+        ? commissionFixedAmount
+        : Math.round((commissionBaseAmount * commissionRate) / 100);
+  const netAmount = Math.max(
+    commissionBaseAmount - commissionAmount,
+    0
+  );
   const paymentBreakdown = form.paymentBreakdown || {
     cash: "",
     transfer: "",
@@ -827,7 +843,14 @@ function App() {
         issuerBusinessId: selectedBusiness.id || "own",
         issuerBusinessSnapshot: selectedBusiness,
         chargeAmount,
+        baseChargeAmount,
         materialCost,
+        commissionType,
+        commissionRate,
+        commissionFixedAmount,
+        commissionBaseAmount,
+        commissionAmount,
+        netAmount,
         paymentBreakdown,
         paymentTotal,
         paymentDifference: chargeAmount - paymentTotal,

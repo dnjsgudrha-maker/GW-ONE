@@ -23,16 +23,28 @@ const QUICK_AMOUNTS = [
 ];
 
 const TAX_KEYS = new Set(["card", "invoice"]);
+const PRESET_RATES = new Set(["10", "20", "30", "40"]);
 
 function roundedTaxIncluded(amount) {
   return Math.round(Number(amount || 0) * 1.1);
+}
+
+function commissionSelectValue(form) {
+  if (form.commissionType === "none") return "none";
+  if (form.commissionType === "fixed") return "fixed";
+
+  const rate = String(form.commissionRate ?? "30");
+  return PRESET_RATES.has(rate) ? rate : "custom";
 }
 
 export default function PaymentBox({
   form,
   setForm,
   chargeAmount,
-  materialCost
+  materialCost,
+  commissionBaseAmount,
+  commissionAmount,
+  netAmount
 }) {
   const payment = form.paymentBreakdown || {
     cash: "",
@@ -46,6 +58,7 @@ export default function PaymentBox({
     0
   );
   const difference = chargeAmount - paymentTotal;
+  const selectedCommission = commissionSelectValue(form);
 
   const getBaseAmount = () => {
     const savedBase = Number(form.baseChargeAmount || 0);
@@ -149,6 +162,45 @@ export default function PaymentBox({
     });
   };
 
+  const changeCommission = (value) => {
+    if (value === "none") {
+      setForm({
+        ...form,
+        commissionType: "none",
+        commissionRate: "0",
+        commissionFixedAmount: ""
+      });
+      return;
+    }
+
+    if (value === "fixed") {
+      setForm({
+        ...form,
+        commissionType: "fixed",
+        commissionFixedAmount: form.commissionFixedAmount || ""
+      });
+      return;
+    }
+
+    if (value === "custom") {
+      setForm({
+        ...form,
+        commissionType: "percent",
+        commissionRate: PRESET_RATES.has(String(form.commissionRate))
+          ? ""
+          : String(form.commissionRate || "")
+      });
+      return;
+    }
+
+    setForm({
+      ...form,
+      commissionType: "percent",
+      commissionRate: value,
+      commissionFixedAmount: ""
+    });
+  };
+
   return (
     <div className="form-section easy-payment-section">
       <h3>금액 입력</h3>
@@ -207,8 +259,84 @@ export default function PaymentBox({
             placeholder="사용한 자재비만 입력"
           />
         </Field>
-        <p>
-          자재비는 작업에 사용한 실제 자재 금액만 입력해 주세요.
+        <p>자재비는 작업에 사용한 실제 자재 금액만 입력해 주세요.</p>
+      </div>
+
+      <div className="commission-box">
+        <Field label="수수료">
+          <select
+            value={selectedCommission}
+            onChange={(event) => changeCommission(event.target.value)}
+          >
+            <option value="none">없음</option>
+            <option value="10">10%</option>
+            <option value="20">20%</option>
+            <option value="30">30% (기본)</option>
+            <option value="40">40%</option>
+            <option value="custom">직접입력(%)</option>
+            <option value="fixed">금액입력(원)</option>
+          </select>
+        </Field>
+
+        {selectedCommission === "custom" && (
+          <Field label="수수료 직접입력(%)">
+            <div className="commission-input-with-unit">
+              <input
+                inputMode="decimal"
+                value={form.commissionRate || ""}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    commissionType: "percent",
+                    commissionRate: event.target.value
+                      .replace(/[^0-9.]/g, "")
+                      .slice(0, 6)
+                  })
+                }
+                placeholder="예: 27"
+              />
+              <span>%</span>
+            </div>
+          </Field>
+        )}
+
+        {selectedCommission === "fixed" && (
+          <Field label="수수료 금액">
+            <input
+              className="easy-large-input"
+              inputMode="numeric"
+              value={formatNumericInput(form.commissionFixedAmount || "")}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  commissionType: "fixed",
+                  commissionFixedAmount: rawNumericValue(event.target.value)
+                })
+              }
+              placeholder="예: 10,000"
+            />
+          </Field>
+        )}
+
+        <div className="commission-result-grid">
+          <div>
+            <span>수수료 기준금액</span>
+            <strong>{formatWon(commissionBaseAmount)}</strong>
+            <small>원금 - 자재비</small>
+          </div>
+          <div>
+            <span>수수료</span>
+            <strong>{formatWon(commissionAmount)}</strong>
+          </div>
+          <div className="net-amount-result">
+            <span>실수령금액</span>
+            <strong>{formatWon(netAmount)}</strong>
+            <small>원금 - 자재비 - 수수료</small>
+          </div>
+        </div>
+
+        <p className="commission-guide">
+          카드·세금계산서의 10% 추가금은 수수료와 실수령 계산에서 제외됩니다.
         </p>
       </div>
 

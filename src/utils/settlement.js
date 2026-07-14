@@ -73,6 +73,8 @@ export function summarizeMonth(jobs, month) {
         totalCharge: 0,
         totalBaseCharge: 0,
         totalMaterialCost: 0,
+        totalCommission: 0,
+        totalNetAmount: 0,
         cash: 0,
         transfer: 0,
         card: 0,
