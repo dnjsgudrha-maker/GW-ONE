@@ -11,6 +11,9 @@ export default function WorkTemplateEngine({
   setForm
 }) {
   const template = WORK_TEMPLATES[jobType];
+  const uniqueChecks = template
+    ? [...new Set(template.checks || [])]
+    : [];
   const [selected, setSelected] = useState([]);
 
   const preview = useMemo(
@@ -39,7 +42,7 @@ export default function WorkTemplateEngine({
   };
 
   const selectAll = () => {
-    setSelected(template.checks);
+    setSelected(uniqueChecks);
   };
 
   const clearAll = () => {
@@ -66,7 +69,7 @@ export default function WorkTemplateEngine({
       </div>
 
       <div className="choice-grid">
-        {template.checks.map((item) => (
+        {uniqueChecks.map((item) => (
           <button
             type="button"
             key={item}
