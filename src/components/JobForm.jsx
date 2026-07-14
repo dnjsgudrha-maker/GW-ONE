@@ -51,11 +51,6 @@ export default function JobForm({
   onNotice,
   chargeAmount,
   materialCost,
-  settlementBaseAmount,
-  workerRatio,
-  companyRatio,
-  workerShareAmount,
-  companyShareAmount,
   currentRole,
   customerHistory,
   leakData,
@@ -77,8 +72,7 @@ export default function JobForm({
     form.issuerBusinessSnapshot ||
     businessOptions[0];
 
-  const canViewSettlement =
-    currentRole === "대표" || currentRole === "최고관리자";
+  const canSelectBusiness = currentRole === "최고관리자";
 
   useEffect(() => {
     localStorage.setItem("gw-one-easy-mode", easyMode ? "on" : "off");
@@ -321,6 +315,7 @@ export default function JobForm({
               </Field>
 
 
+              {canSelectBusiness ? (
               <div className="document-business-select-box">
                 <Field label="문서에 표시할 상호">
                   <select
@@ -370,6 +365,12 @@ export default function JobForm({
                   </p>
                 </div>
               </div>
+              ) : (
+                <div className="selected-business-card own-business-card">
+                  <div><span>문서 상호</span><strong>{profile.businessName || "내 업체정보 미등록"}</strong></div>
+                  <div><span>사업자등록번호</span><strong>{profile.businessNumber || "미입력"}</strong></div>
+                </div>
+              )}
 
               <div className="two-column">
                 <Field label="작업일">
@@ -532,12 +533,6 @@ export default function JobForm({
               setForm={setForm}
               chargeAmount={chargeAmount}
               materialCost={materialCost}
-              settlementBaseAmount={settlementBaseAmount}
-              workerRatio={workerRatio}
-              companyRatio={companyRatio}
-              workerShareAmount={workerShareAmount}
-              companyShareAmount={companyShareAmount}
-              currentRole={currentRole}
             />
 
 

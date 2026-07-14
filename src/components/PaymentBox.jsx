@@ -32,13 +32,7 @@ export default function PaymentBox({
   form,
   setForm,
   chargeAmount,
-  materialCost,
-  settlementBaseAmount,
-  workerRatio,
-  companyRatio,
-  workerShareAmount,
-  companyShareAmount,
-  currentRole
+  materialCost
 }) {
   const payment = form.paymentBreakdown || {
     cash: "",
@@ -46,9 +40,6 @@ export default function PaymentBox({
     card: "",
     invoice: ""
   };
-
-  const canViewSettlement =
-    currentRole === "대표" || currentRole === "최고관리자";
 
   const paymentTotal = FIELDS.reduce(
     (sum, [key]) => sum + numberValue(payment[key]),
@@ -217,8 +208,7 @@ export default function PaymentBox({
           />
         </Field>
         <p>
-          수수료와 6:4 정산은 카드·세금계산서 10%를 제외한 원금에서
-          자재비를 뺀 금액을 기준으로 계산합니다.
+          자재비는 작업에 사용한 실제 자재 금액만 입력해 주세요.
         </p>
       </div>
 

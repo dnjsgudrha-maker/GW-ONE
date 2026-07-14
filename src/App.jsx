@@ -171,8 +171,6 @@ function App() {
             approved: pendingData ? true : false,
             disabled: pendingData?.disabled || false,
             role: pendingData?.role || "기사",
-            workerRatio: Number(pendingData?.workerRatio ?? 60),
-            companyRatio: Number(pendingData?.companyRatio ?? 40),
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           };
@@ -478,30 +476,7 @@ function App() {
     chargeAmount;
   const materialCost =
     Number(String(form.materialCost || "").replace(/,/g, "")) || 0;
-  const settlementBaseAmount = Math.max(
-    baseChargeAmount - materialCost,
-    0
-  );
-  const currentWorkerRatio = Math.min(
-    100,
-    Math.max(0, Number(profile.workerRatio ?? 60))
-  );
-  const currentCompanyRatio = 100 - currentWorkerRatio;
-  const workerShareAmount = Math.round(
-    settlementBaseAmount * (currentWorkerRatio / 100)
-  );
-  const companyShareAmount = Math.max(
-    settlementBaseAmount - workerShareAmount,
-    0
-  );
-
-  // 기존 데이터 호환용 필드입니다.
-  const commissionType = "percent";
-  const commissionRate = currentCompanyRatio;
-  const commissionFixedAmount = 0;
-  const commissionBaseAmount = settlementBaseAmount;
-  const commissionAmount = companyShareAmount;
-  const netAmount = workerShareAmount;
+  // 6:4 정산 기능은 제거했습니다. 자재비는 기록용으로만 저장합니다.
   const paymentBreakdown = form.paymentBreakdown || {
     cash: "",
     transfer: "",
@@ -799,8 +774,8 @@ function App() {
 
       const selectedBusiness = resolveDocumentBusiness(
         profile,
-        form.issuerBusinessId || "own",
-        form.issuerBusinessSnapshot,
+        isAdmin ? form.issuerBusinessId || "own" : "own",
+        isAdmin ? form.issuerBusinessSnapshot : null,
         allProfiles
       );
 
@@ -810,17 +785,6 @@ function App() {
         issuerBusinessSnapshot: selectedBusiness,
         chargeAmount,
         materialCost,
-        settlementBaseAmount,
-        workerRatio: currentWorkerRatio,
-        companyRatio: currentCompanyRatio,
-        workerShareAmount,
-        companyShareAmount,
-        commissionType,
-        commissionRate,
-        commissionBaseAmount,
-        commissionFixedAmount,
-        commissionAmount,
-        netAmount,
         paymentBreakdown,
         paymentTotal,
         paymentDifference: chargeAmount - paymentTotal,
@@ -1066,28 +1030,6 @@ function App() {
   );
 
 
-  const handleSaveWorkerRatio = async (
-    targetUid,
-    workerRatio,
-    companyRatio
-  ) => {
-    if (!isAdmin && profile.role !== "대표") {
-      setNotice("정산비율은 최고관리자 또는 대표만 변경할 수 있습니다.");
-      return;
-    }
-
-    try {
-      await updateDoc(doc(db, "profiles", targetUid), {
-        workerRatio,
-        companyRatio,
-        updatedAt: serverTimestamp()
-      });
-      setNotice(`정산비율을 기사 ${workerRatio}% / 본사 ${companyRatio}%로 저장했습니다.`);
-    } catch (error) {
-      setNotice(`정산비율을 저장하지 못했습니다: ${error.message}`);
-    }
-  };
-
   const handleCreateWorker = async (workerData) => {
     if (!isAdmin && profile.role !== "대표") {
       setNotice("작업자 추가는 최고관리자 또는 대표만 가능합니다.");
@@ -1108,8 +1050,6 @@ function App() {
           businessName: workerData.businessName?.trim() || "",
           businessNumber: workerData.businessNumber?.trim() || "",
           role: workerData.role || "기사",
-          workerRatio: workerData.workerRatio,
-          companyRatio: workerData.companyRatio,
           approved: true,
           disabled: false,
           updatedAt: serverTimestamp()
@@ -1190,8 +1130,7 @@ function App() {
           <WorkDashboard
             jobs={currentRole === "기사" ? jobs : allJobs}
             profiles={allProfiles}
-            currentRole={currentRole}
-            onOpenJob={setSelectedJob}
+              onOpenJob={setSelectedJob}
             onCreateJob={openNewJobForm}
           />
         )}
@@ -1239,13 +1178,7 @@ function App() {
             onNotice={setNotice}
             chargeAmount={chargeAmount}
             materialCost={materialCost}
-            settlementBaseAmount={settlementBaseAmount}
-            workerRatio={currentWorkerRatio}
-            companyRatio={currentCompanyRatio}
-            workerShareAmount={workerShareAmount}
-            companyShareAmount={companyShareAmount}
-            currentRole={currentRole}
-            customerHistory={customerHistory}
+              customerHistory={customerHistory}
             leakData={leakData}
             setLeakData={setLeakData}
             editingJob={editingJob}
@@ -1283,7 +1216,6 @@ function App() {
             onAdminToggle={(uid, makeAdminValue) =>
               makeAdminValue ? makeAdmin(uid) : removeAdmin(uid)
             }
-            onSaveRatio={handleSaveWorkerRatio}
             onCreateWorker={handleCreateWorker}
           />
         )}
@@ -1374,7 +1306,6 @@ function App() {
             isAdmin || (selectedJob.ownerUid || user.uid) === user.uid
           }
           isSuperAdmin={isAdmin}
-          currentRole={currentRole}
           onNotice={setNotice}
           onOpenDocument={setDocumentType}
           onEdit={() => startEditJob(selectedJob)}

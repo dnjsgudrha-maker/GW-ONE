@@ -28,23 +28,11 @@ export function resolveSettlement(job) {
   const baseChargeAmount =
     numberValue(job?.baseChargeAmount) || chargeAmount;
   const materialCost = numberValue(job?.materialCost);
-  const settlementBaseAmount =
-    numberValue(job?.settlementBaseAmount) ||
-    Math.max(baseChargeAmount - materialCost, 0);
-  const workerShareAmount =
-    numberValue(job?.workerShareAmount) ||
-    Math.round(settlementBaseAmount * 0.6);
-  const companyShareAmount =
-    numberValue(job?.companyShareAmount) ||
-    Math.max(settlementBaseAmount - workerShareAmount, 0);
 
   return {
     chargeAmount,
     baseChargeAmount,
     materialCost,
-    settlementBaseAmount,
-    workerShareAmount,
-    companyShareAmount
   };
 }
 
@@ -65,9 +53,6 @@ export function summarizeMonth(jobs, month) {
         summary.totalCharge += settlement.chargeAmount;
         summary.totalBaseCharge += settlement.baseChargeAmount;
         summary.totalMaterialCost += settlement.materialCost;
-        summary.totalSettlementBase += settlement.settlementBaseAmount;
-        summary.totalWorkerShare += settlement.workerShareAmount;
-        summary.totalCompanyShare += settlement.companyShareAmount;
         summary.cash += payment.cash;
         summary.transfer += payment.transfer;
         summary.card += payment.card;
@@ -88,9 +73,6 @@ export function summarizeMonth(jobs, month) {
         totalCharge: 0,
         totalBaseCharge: 0,
         totalMaterialCost: 0,
-        totalSettlementBase: 0,
-        totalWorkerShare: 0,
-        totalCompanyShare: 0,
         cash: 0,
         transfer: 0,
         card: 0,

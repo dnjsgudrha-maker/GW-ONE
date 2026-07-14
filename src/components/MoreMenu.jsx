@@ -40,7 +40,7 @@ export default function MoreMenu({
             <small>
               {role === "기사"
                 ? "내 작업금액·자재비"
-                : "전체 6:4 정산 확인"}
+                : "전체 작업금액·자재비"}
             </small>
           </button>
         )}
