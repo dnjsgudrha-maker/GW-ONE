@@ -153,14 +153,26 @@ function App() {
           });
         } else {
           const normalizedEmail = String(user.email || "").toLowerCase();
-          const pendingQuery = query(
-            collection(db, "pendingWorkers"),
-            where("email", "==", normalizedEmail)
-          );
-          const pendingSnapshot = await getDocs(pendingQuery);
-          const pendingData = pendingSnapshot.empty
-            ? null
-            : pendingSnapshot.docs[0].data();
+          let pendingData = null;
+          let pendingWorkerId = "";
+
+          try {
+            const pendingQuery = query(
+              collection(db, "pendingWorkers"),
+              where("email", "==", normalizedEmail)
+            );
+            const pendingSnapshot = await getDocs(pendingQuery);
+
+            if (!pendingSnapshot.empty) {
+              pendingData = pendingSnapshot.docs[0].data();
+              pendingWorkerId = pendingSnapshot.docs[0].id;
+            }
+          } catch (pendingError) {
+            console.warn(
+              "사전 등록 작업자 조회를 건너뜁니다:",
+              pendingError
+            );
+          }
 
           const newProfile = {
             ...initialProfile,
@@ -179,14 +191,20 @@ function App() {
           };
 
           await setDoc(profileRef, newProfile);
-
-          if (!pendingSnapshot.empty) {
-            await deleteDoc(
-              doc(db, "pendingWorkers", pendingSnapshot.docs[0].id)
-            );
-          }
-
           setProfile(newProfile);
+
+          if (pendingWorkerId) {
+            try {
+              await deleteDoc(
+                doc(db, "pendingWorkers", pendingWorkerId)
+              );
+            } catch (deleteError) {
+              console.warn(
+                "사전 등록 작업자 항목 삭제를 건너뜁니다:",
+                deleteError
+              );
+            }
+          }
         }
 
         setProfileLoaded(true);
