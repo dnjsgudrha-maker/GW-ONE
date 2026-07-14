@@ -3741,3 +3741,106 @@ button { cursor: pointer; }
     border-radius: 24px !important;
   }
 }
+
+
+/* GW ONE v4.3 사진·동영상·문서 이미지 저장 */
+.video-field {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #d5deea;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.photo-action-button.video {
+  width: 100%;
+  min-height: 58px;
+}
+
+.video-preview-list {
+  display: grid;
+  gap: 10px;
+}
+
+.video-preview-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 11px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #d8e1ec;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.video-preview-card video {
+  width: 120px;
+  height: 82px;
+  border-radius: 8px;
+  background: #111827;
+  object-fit: cover;
+}
+
+.video-preview-card > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.video-preview-card small {
+  overflow: hidden;
+  color: #667085;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.video-done {
+  color: #12874f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.video-error {
+  color: #b42318;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.video-remove {
+  border: 1px solid #efb0aa;
+  border-radius: 8px;
+  padding: 7px 9px;
+  background: #fff4f2;
+  color: #b42318;
+  font-weight: 800;
+}
+
+.document-modal-toolbar button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+@media (max-width: 560px) {
+  .video-preview-card {
+    grid-template-columns: 1fr;
+  }
+
+  .video-preview-card video {
+    width: 100%;
+    height: 180px;
+  }
+
+  .video-remove {
+    width: 100%;
+  }
+
+  .document-modal-toolbar > div {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+}

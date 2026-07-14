@@ -84,7 +84,14 @@ export default function PhotoField({
 
     const items = nextIncoming.map(makePendingItem);
     onChange((current) => [...current, ...items]);
-    items.forEach(uploadOne);
+
+    // 휴대폰에서 여러 장을 동시에 올리면 실패율이 높아질 수 있어
+    // 한 장씩 순서대로 업로드합니다.
+    void (async () => {
+      for (const item of items) {
+        await uploadOne(item);
+      }
+    })();
   };
 
   const removePhoto = (item) => {
@@ -252,7 +259,7 @@ export default function PhotoField({
       )}
 
       <p className="photo-limit-guide">
-        최대 {MAX_PHOTOS}장 · 선택 즉시 자동 압축 후 Cloudinary에 업로드됩니다.
+        최대 {MAX_PHOTOS}장 · 자동 압축 후 한 장씩 안정적으로 업로드됩니다.
       </p>
     </div>
   );

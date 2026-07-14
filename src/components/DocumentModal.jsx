@@ -1,3 +1,6 @@
+import { useRef, useState } from "react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import { formatWon } from "../utils/formatters";
 
 function InfoRow({ label, value }) {
@@ -66,7 +69,7 @@ function DocumentPhotos({ job }) {
 
 function WorkReport({ job }) {
   return (
-    <article className="print-document">
+    <article className="print-document" data-document-title="작업보고서">
       <DocumentHeader title="작 업 보 고 서" job={job} />
 
       <section className="doc-section">
@@ -110,7 +113,7 @@ function WorkReport({ job }) {
 
 function Opinion({ job }) {
   return (
-    <article className="print-document">
+    <article className="print-document" data-document-title="소견서">
       <DocumentHeader title="소 견 서" job={job} />
 
       <section className="doc-section opinion-body">
@@ -141,7 +144,7 @@ function Opinion({ job }) {
 
 function Receipt({ job }) {
   return (
-    <article className="print-document receipt-document">
+    <article className="print-document receipt-document" data-document-title="영수증">
       <DocumentHeader title="영 수 증" job={job} />
 
       <section className="doc-section">
@@ -191,13 +194,199 @@ function DocumentFooter({ job }) {
   );
 }
 
+
+function safeFileName(value) {
+  return String(value || "문서")
+    .replace(/[\\/:*?"<>|]/g, "_")
+    .replace(/\s+/g, "_");
+}
+
+function compactDate(value) {
+  return String(value || new Date().toISOString().slice(0, 10))
+    .replace(/\D/g, "")
+    .slice(0, 8);
+}
+
+function sequenceText(value) {
+  return String(Math.max(1, Number(value || 1))).padStart(3, "0");
+}
+
+function documentFileName(job, title, extension) {
+  return [
+    compactDate(job.workDate),
+    safeFileName(job.worker || job.representativeName || "작업자"),
+    sequenceText(job.dailySequence),
+    safeFileName(title)
+  ].join("_") + `.${extension}`;
+}
+
+async function waitForImages(element) {
+  const images = Array.from(element.querySelectorAll("img"));
+  await Promise.all(
+    images.map((image) => {
+      if (image.complete) return Promise.resolve();
+
+      return new Promise((resolve) => {
+        image.onload = resolve;
+        image.onerror = resolve;
+      });
+    })
+  );
+}
+
+async function elementToCanvas(element) {
+  await waitForImages(element);
+
+  return html2canvas(element, {
+    scale: Math.min(window.devicePixelRatio || 2, 2.5),
+    useCORS: true,
+    allowTaint: false,
+    backgroundColor: "#ffffff",
+    logging: false,
+    windowWidth: element.scrollWidth,
+    windowHeight: element.scrollHeight
+  });
+}
+
+function downloadCanvas(canvas, filename) {
+  const link = document.createElement("a");
+  link.download = filename;
+  link.href = canvas.toDataURL("image/png", 1);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function saveCanvasAsPdf(canvas, filename) {
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+    compress: true
+  });
+
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const margin = 8;
+  const usableWidth = pageWidth - margin * 2;
+  const usableHeight = pageHeight - margin * 2;
+
+  const imageWidth = usableWidth;
+  const imageHeight = (canvas.height * imageWidth) / canvas.width;
+  const pagePixelHeight = Math.max(
+    1,
+    Math.floor((usableHeight / imageHeight) * canvas.height)
+  );
+
+  let offsetY = 0;
+  let pageIndex = 0;
+
+  while (offsetY < canvas.height) {
+    const sliceHeight = Math.min(pagePixelHeight, canvas.height - offsetY);
+    const slice = document.createElement("canvas");
+    slice.width = canvas.width;
+    slice.height = sliceHeight;
+
+    const context = slice.getContext("2d");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, slice.width, slice.height);
+    context.drawImage(
+      canvas,
+      0,
+      offsetY,
+      canvas.width,
+      sliceHeight,
+      0,
+      0,
+      canvas.width,
+      sliceHeight
+    );
+
+    const sliceHeightMm = (sliceHeight * imageWidth) / canvas.width;
+
+    if (pageIndex > 0) pdf.addPage();
+    pdf.addImage(
+      slice.toDataURL("image/jpeg", 0.92),
+      "JPEG",
+      margin,
+      margin,
+      imageWidth,
+      Math.min(sliceHeightMm, usableHeight),
+      undefined,
+      "FAST"
+    );
+
+    offsetY += sliceHeight;
+    pageIndex += 1;
+  }
+
+  pdf.save(filename);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export default function DocumentModal({ type, job, onClose }) {
+  const captureRef = useRef(null);
+  const [savingMode, setSavingMode] = useState("");
+
   const titles = {
     report: "작업보고서",
     opinion: "소견서",
     receipt: "영수증",
-    package: "현장 제출 패키지"
+    package: "전체 문서"
   };
+
+  const getTargets = () => {
+    if (!captureRef.current) return [];
+
+    return Array.from(
+      captureRef.current.querySelectorAll(".print-document")
+    ).map((element) => ({
+      element,
+      title: element.dataset.documentTitle || "문서"
+    }));
+  };
+
+  const saveDocuments = async (format) => {
+    if (savingMode) return;
+
+    const targets = getTargets();
+    if (!targets.length) return;
+
+    setSavingMode(format);
+
+    try {
+      for (let index = 0; index < targets.length; index += 1) {
+        const { element, title } = targets[index];
+        const canvas = await elementToCanvas(element);
+        const filename = documentFileName(
+          job,
+          title,
+          format === "pdf" ? "pdf" : "png"
+        );
+
+        if (format === "pdf") {
+          saveCanvasAsPdf(canvas, filename);
+        } else {
+          downloadCanvas(canvas, filename);
+        }
+
+        if (index < targets.length - 1) {
+          await sleep(450);
+        }
+      }
+    } catch (error) {
+      window.alert(
+        `문서 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.\n${error.message}`
+      );
+    } finally {
+      setSavingMode("");
+    }
+  };
+
+  const isPackage = type === "package";
 
   return (
     <div className="document-modal-backdrop">
@@ -205,12 +394,31 @@ export default function DocumentModal({ type, job, onClose }) {
         <div className="document-modal-toolbar no-print">
           <strong>{titles[type]}</strong>
           <div>
-            <button onClick={() => window.print()}>🖨 인쇄 / PDF 저장</button>
+            <button
+              onClick={() => saveDocuments("pdf")}
+              disabled={Boolean(savingMode)}
+            >
+              {savingMode === "pdf"
+                ? "PDF 만드는 중..."
+                : isPackage
+                  ? "📄 PDF 전체 저장"
+                  : "📄 PDF 저장"}
+            </button>
+            <button
+              onClick={() => saveDocuments("png")}
+              disabled={Boolean(savingMode)}
+            >
+              {savingMode === "png"
+                ? "이미지 만드는 중..."
+                : isPackage
+                  ? "🖼 이미지 전체 저장"
+                  : "🖼 이미지 저장"}
+            </button>
             <button onClick={onClose}>닫기</button>
           </div>
         </div>
 
-        <div className="document-preview">
+        <div className="document-preview" ref={captureRef}>
           {type === "report" && <WorkReport job={job} />}
           {type === "opinion" && <Opinion job={job} />}
           {type === "receipt" && <Receipt job={job} />}

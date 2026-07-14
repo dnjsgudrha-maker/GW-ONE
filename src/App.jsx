@@ -42,8 +42,10 @@ import {
 import { resolveDocumentBusiness } from "./utils/businesses";
 import {
   existingPhotoItem,
+  existingVideoItem,
   hasFailedPhotos,
   hasPendingPhotos,
+  mediaUrls,
   photoUrls
 } from "./utils/cloudinary";
 import { CenteredCard } from "./components/Common";
@@ -79,6 +81,7 @@ function App() {
   const [beforePhotos, setBeforePhotos] = useState([]);
   const [duringPhotos, setDuringPhotos] = useState([]);
   const [afterPhotos, setAfterPhotos] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [notice, setNotice] = useState("");
@@ -576,6 +579,7 @@ function App() {
     setBeforePhotos([]);
     setDuringPhotos([]);
     setAfterPhotos([]);
+    setVideos([]);
     setView("form");
     setNotice("");
   };
@@ -715,6 +719,11 @@ function App() {
         existingPhotoItem(url, index)
       )
     );
+    setVideos(
+      (job.videoUrls || []).map((url, index) =>
+        existingVideoItem(url, index)
+      )
+    );
     setSelectedJob(null);
     setView("form");
     setNotice("작업일지를 수정 중입니다.");
@@ -755,7 +764,8 @@ function App() {
       const allPhotoItems = [
         ...beforePhotos,
         ...duringPhotos,
-        ...afterPhotos
+        ...afterPhotos,
+        ...videos
       ];
 
       if (hasPendingPhotos(allPhotoItems)) {
@@ -771,6 +781,7 @@ function App() {
       const beforePhotoUrls = photoUrls(beforePhotos);
       const duringPhotoUrls = photoUrls(duringPhotos);
       const afterPhotoUrls = photoUrls(afterPhotos);
+      const videoUrls = mediaUrls(videos);
 
       const selectedBusiness = resolveDocumentBusiness(
         profile,
@@ -779,8 +790,22 @@ function App() {
         allProfiles
       );
 
+      const dailySequence = editingJob?.dailySequence || (() => {
+        const sameDayWorkerJobs = jobs.filter(
+          (job) =>
+            job.workDate === form.workDate &&
+            String(job.worker || "").trim() === String(form.worker || "").trim()
+        );
+        const maxSequence = sameDayWorkerJobs.reduce(
+          (max, job) => Math.max(max, Number(job.dailySequence || 0)),
+          0
+        );
+        return maxSequence + 1;
+      })();
+
       const commonData = {
         ...form,
+        dailySequence,
         issuerBusinessId: selectedBusiness.id || "own",
         issuerBusinessSnapshot: selectedBusiness,
         chargeAmount,
@@ -841,6 +866,7 @@ function App() {
             beforePhotoUrls,
             duringPhotoUrls,
             afterPhotoUrls,
+            videoUrls,
             photoUrls: [
               ...beforePhotoUrls,
               ...duringPhotoUrls,
@@ -1172,6 +1198,8 @@ function App() {
             setDuringPhotos={setDuringPhotos}
             afterPhotos={afterPhotos}
             setAfterPhotos={setAfterPhotos}
+            videos={videos}
+            setVideos={setVideos}
             onSave={handleSave}
             saving={saving}
             onBack={() => setView("list")}

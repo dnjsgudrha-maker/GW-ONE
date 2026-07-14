@@ -4,6 +4,7 @@ import { Field } from "./Common";
 import OrderOCR from "./OrderOCR";
 import PaymentBox from "./PaymentBox";
 import PhotoField from "./PhotoField";
+import VideoField from "./VideoField";
 import ProfileBox from "./ProfileBox";
 import LeakOpinionEngine from "./LeakOpinionEngine";
 import WorkTemplateEngine from "./WorkTemplateEngine";
@@ -45,6 +46,8 @@ export default function JobForm({
   setDuringPhotos,
   afterPhotos,
   setAfterPhotos,
+  videos,
+  setVideos,
   onSave,
   saving,
   onBack,
@@ -490,7 +493,7 @@ export default function JobForm({
                   </p>
                 </div>
                 <strong>
-                  총 {beforePhotos.length + duringPhotos.length + afterPhotos.length}장
+                  사진 {beforePhotos.length + duringPhotos.length + afterPhotos.length}장 · 동영상 {videos.length}개
                 </strong>
               </div>
               <PhotoField
@@ -512,6 +515,13 @@ export default function JobForm({
                 folder="after"
                 files={afterPhotos}
                 onChange={setAfterPhotos}
+                onNotice={onNotice}
+              />
+              <VideoField
+                title="현장 동영상"
+                folder="videos"
+                files={videos}
+                onChange={setVideos}
                 onNotice={onNotice}
               />
             </div>

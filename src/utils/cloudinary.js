@@ -3,13 +3,13 @@ import { compressImage } from "./images";
 export const CLOUDINARY_CLOUD_NAME = "cgn7v0cd";
 export const CLOUDINARY_UPLOAD_PRESET = "gw-one";
 
-const MAX_RETRIES = 2;
+const MAX_RETRIES = 3;
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function uploadRequest(file, folder, onProgress) {
+function uploadRequest(file, folder, resourceType, onProgress) {
   return new Promise((resolve, reject) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -19,7 +19,7 @@ function uploadRequest(file, folder, onProgress) {
     const xhr = new XMLHttpRequest();
     xhr.open(
       "POST",
-      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`
     );
 
     xhr.upload.onprogress = (event) => {
@@ -42,9 +42,11 @@ function uploadRequest(file, folder, onProgress) {
           publicId: payload.public_id || "",
           width: payload.width || 0,
           height: payload.height || 0,
+          duration: payload.duration || 0,
           bytes: payload.bytes || file.size || 0,
           format: payload.format || "",
-          originalName: file.name || "photo"
+          originalName: file.name || "media",
+          resourceType
         });
         return;
       }
@@ -52,45 +54,93 @@ function uploadRequest(file, folder, onProgress) {
       reject(
         new Error(
           payload?.error?.message ||
-            `사진 업로드에 실패했습니다. (${xhr.status || "network"})`
+            `업로드에 실패했습니다. (${xhr.status || "network"})`
         )
       );
     };
 
-    xhr.onerror = () => reject(new Error("사진 업로드 중 인터넷 연결이 끊겼습니다."));
-    xhr.ontimeout = () => reject(new Error("사진 업로드 시간이 초과되었습니다."));
-    xhr.timeout = 120000;
+    xhr.onerror = () =>
+      reject(new Error("업로드 중 인터넷 연결이 끊겼습니다."));
+    xhr.ontimeout = () =>
+      reject(new Error("업로드 시간이 초과되었습니다."));
+    xhr.timeout = resourceType === "video" ? 300000 : 180000;
     xhr.send(formData);
   });
+}
+
+async function uploadWithRetry({
+  file,
+  folder,
+  resourceType,
+  onProgress,
+  retryCount = 0
+}) {
+  try {
+    const uploadFile =
+      resourceType === "image" ? await compressImage(file) : file;
+
+    onProgress?.(8, "uploading");
+
+    return await uploadRequest(
+      uploadFile,
+      folder,
+      resourceType,
+      (percent) =>
+        onProgress?.(Math.max(8, percent), "uploading")
+    );
+  } catch (error) {
+    if (retryCount < MAX_RETRIES) {
+      onProgress?.(0, "retrying");
+      await wait(1100 * (retryCount + 1));
+      return uploadWithRetry({
+        file,
+        folder,
+        resourceType,
+        onProgress,
+        retryCount: retryCount + 1
+      });
+    }
+
+    throw error;
+  }
 }
 
 export async function uploadPhotoToCloudinary(
   file,
   folder,
-  onProgress,
-  retryCount = 0
+  onProgress
 ) {
-  try {
-    onProgress?.(3, "compressing");
-    const compressed = await compressImage(file);
-    onProgress?.(8, "uploading");
-    return await uploadRequest(compressed, folder, (percent) =>
-      onProgress?.(Math.max(8, percent), "uploading")
-    );
-  } catch (error) {
-    if (retryCount < MAX_RETRIES) {
-      onProgress?.(0, "retrying");
-      await wait(900 * (retryCount + 1));
-      return uploadPhotoToCloudinary(
-        file,
-        folder,
-        onProgress,
-        retryCount + 1
-      );
-    }
+  onProgress?.(3, "compressing");
+  return uploadWithRetry({
+    file,
+    folder,
+    resourceType: "image",
+    onProgress
+  });
+}
 
-    throw error;
-  }
+export async function uploadVideoToCloudinary(
+  file,
+  folder,
+  onProgress
+) {
+  // 모바일 브라우저에서는 선택한 동영상을 안정적으로 재인코딩하기 어렵습니다.
+  // 업로드 후 Cloudinary의 자동 최적화 URL로 재생해 데이터 사용량을 줄입니다.
+  onProgress?.(3, "preparing");
+  return uploadWithRetry({
+    file,
+    folder,
+    resourceType: "video",
+    onProgress
+  });
+}
+
+export function optimizedVideoUrl(url) {
+  if (!url || !url.includes("/upload/")) return url;
+  return url.replace(
+    "/upload/",
+    "/upload/q_auto:eco,f_auto,vc_auto,w_1280/"
+  );
 }
 
 export function existingPhotoItem(url, index = 0) {
@@ -101,19 +151,39 @@ export function existingPhotoItem(url, index = 0) {
     originalName: `기존 사진 ${index + 1}`,
     progress: 100,
     status: "done",
-    error: ""
+    error: "",
+    resourceType: "image"
   };
 }
 
-export function photoUrls(items = []) {
+export function existingVideoItem(url, index = 0) {
+  return {
+    id: `existing-video-${index}-${url}`,
+    url,
+    publicId: "",
+    originalName: `기존 동영상 ${index + 1}`,
+    progress: 100,
+    status: "done",
+    error: "",
+    resourceType: "video"
+  };
+}
+
+export function mediaUrls(items = []) {
   return items
     .filter((item) => item?.status === "done" && item?.url)
     .map((item) => item.url);
 }
 
+export const photoUrls = mediaUrls;
+
 export function hasPendingPhotos(items = []) {
   return items.some(
-    (item) => item?.status === "uploading" || item?.status === "retrying"
+    (item) =>
+      item?.status === "uploading" ||
+      item?.status === "retrying" ||
+      item?.status === "compressing" ||
+      item?.status === "preparing"
   );
 }
 
