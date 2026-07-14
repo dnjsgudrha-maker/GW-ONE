@@ -47,9 +47,7 @@ export default function PhotoField({
         }
       );
 
-      if (item.url?.startsWith("blob:")) {
-        URL.revokeObjectURL(item.url);
-      }
+      const localPreviewUrl = item.url;
 
       updateItem(item.id, {
         ...result,
@@ -58,6 +56,14 @@ export default function PhotoField({
         status: "done",
         error: ""
       });
+
+      // 상태가 Cloudinary URL로 바뀌기 전에 blob URL을 먼저 해제하면
+      // 일부 안드로이드 브라우저에서 깨진 이미지로 표시될 수 있습니다.
+      if (localPreviewUrl?.startsWith("blob:")) {
+        window.setTimeout(() => {
+          URL.revokeObjectURL(localPreviewUrl);
+        }, 1200);
+      }
     } catch (error) {
       updateItem(item.id, {
         progress: 0,
@@ -209,7 +215,29 @@ export default function PhotoField({
               className={`photo-preview-card cloud-photo-card ${item.status}`}
               key={item.id}
             >
-              <img src={item.url} alt={`${title} ${index + 1}`} />
+              <img
+                src={item.url}
+                alt={`${title} ${index + 1}`}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                onError={(event) => {
+                  const image = event.currentTarget;
+                  const retryCount = Number(image.dataset.retryCount || 0);
+
+                  if (
+                    item.status === "done" &&
+                    item.url &&
+                    retryCount < 1
+                  ) {
+                    image.dataset.retryCount = "1";
+                    const separator = item.url.includes("?") ? "&" : "?";
+                    image.src = `${item.url}${separator}gw_retry=${Date.now()}`;
+                    return;
+                  }
+
+                  image.classList.add("photo-image-load-error");
+                }}
+              />
               <span>{index + 1}</span>
 
               <button
@@ -252,6 +280,17 @@ export default function PhotoField({
 
               {item.status === "done" && (
                 <div className="photo-upload-done">✓ 업로드 완료</div>
+              )}
+
+              {item.status === "done" && item.url && (
+                <a
+                  className="photo-open-original"
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  원본 보기
+                </a>
               )}
             </div>
           ))}

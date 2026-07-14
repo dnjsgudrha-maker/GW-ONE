@@ -3844,3 +3844,31 @@ button { cursor: pointer; }
     width: 100%;
   }
 }
+
+
+/* GW ONE v4.3.4 사진 미리보기·등록 안정화 */
+.cloud-photo-card img.photo-image-load-error {
+  opacity: .28;
+  background:
+    linear-gradient(135deg, #f2f4f7 25%, #e4e7ec 25%, #e4e7ec 50%, #f2f4f7 50%, #f2f4f7 75%, #e4e7ec 75%);
+  background-size: 18px 18px;
+}
+
+.photo-open-original {
+  position: absolute;
+  left: 7px;
+  bottom: 7px;
+  z-index: 4;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .94);
+  color: #155eef;
+  font-size: 10px;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,.16);
+}
+
+.photo-upload-done {
+  right: 7px;
+}
