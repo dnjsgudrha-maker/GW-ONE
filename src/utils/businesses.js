@@ -12,6 +12,21 @@ export function ownBusinessFromProfile(profile = {}) {
   };
 }
 
+
+export function headOfficeBusinessFromProfile(profile = {}) {
+  const saved = profile.headOfficeBusiness;
+
+  if (saved?.businessName) {
+    return {
+      ...saved,
+      id: saved.id || "head-office",
+      isHeadOffice: true
+    };
+  }
+
+  return ownBusinessFromProfile(profile);
+}
+
 function workerBusinessFromProfile(worker = {}) {
   return {
     id: `worker-${worker.uid || worker.email || worker.businessNumber}`,
@@ -69,8 +84,12 @@ export function resolveDocumentBusiness(
   profile,
   businessId,
   fallback = null,
-  allProfiles = []
+  allProfiles = [],
+  forceHeadOffice = false
 ) {
+  if (forceHeadOffice) {
+    return headOfficeBusinessFromProfile(profile);
+  }
   const found = getDocumentBusinesses(profile, allProfiles).find(
     (item) => item.id === businessId
   );

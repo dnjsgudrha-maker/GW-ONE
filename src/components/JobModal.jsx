@@ -47,7 +47,9 @@ export default function JobModal({
   onCopy,
   canEdit = true,
   canDelete = true,
-  isSuperAdmin = false
+  isSuperAdmin = false,
+  canManageCollection = false,
+  onMarkCollected
 }) {
   const paymentBreakdown = getPaymentBreakdown(job);
 
@@ -91,6 +93,10 @@ export default function JobModal({
           />
           <Detail label="실수령금액" value={formatWon(job.netAmount)} />
           <Detail
+            label="수금상태"
+            value={job.collectionStatus === "uncollected" ? "미수" : "수금완료"}
+          />
+          <Detail
             label="결제내역"
             value={[
               paymentBreakdown.cash > 0 ? `현금 ${formatWon(paymentBreakdown.cash)}` : "",
@@ -104,6 +110,19 @@ export default function JobModal({
         <DetailBlock label="작업내용" value={job.workContent || "-"} />
         <DetailBlock label="작업결과" value={job.result || "-"} />
         <DetailBlock label="특이사항" value={job.memo || "-"} />
+        {job.collectionMemo && (
+          <DetailBlock label="미수 메모" value={job.collectionMemo} />
+        )}
+
+        {canManageCollection && job.collectionStatus === "uncollected" && (
+          <button
+            type="button"
+            className="mark-collected-detail-button"
+            onClick={() => onMarkCollected?.(job)}
+          >
+            ✅ 수금완료 처리
+          </button>
+        )}
 
         {job.followUpDate && (
           <DetailBlock
