@@ -663,17 +663,8 @@ function App() {
       worker: job.worker || "",
       assignedWorkerUid: job.ownerUid || job.assignedWorkerUid || "",
       assignedWorkerEmail: job.ownerEmail || job.assignedWorkerEmail || "",
-      issuerBusinessId: job.issuerBusinessId || "own",
-      issuerBusinessSnapshot: job.issuerBusinessSnapshot || {
-        id: job.issuerBusinessId || "saved",
-        businessName: job.businessName || "",
-        representativeName: job.representativeName || "",
-        businessNumber: job.businessNumber || "",
-        contact: job.businessContact || "",
-        businessEmail: job.businessEmail || "",
-        businessAddress: job.businessAddress || "",
-        stampDataUrl: job.stampDataUrl || ""
-      },
+      issuerBusinessId: "head-office",
+      issuerBusinessSnapshot: null,
       workContent: job.workContent || "",
       result: job.result || "",
       asPeriod: job.asPeriod || "1년",
@@ -733,17 +724,8 @@ function App() {
       worker: job.worker || "",
       assignedWorkerUid: job.ownerUid || job.assignedWorkerUid || "",
       assignedWorkerEmail: job.ownerEmail || job.assignedWorkerEmail || "",
-      issuerBusinessId: job.issuerBusinessId || "own",
-      issuerBusinessSnapshot: job.issuerBusinessSnapshot || {
-        id: job.issuerBusinessId || "saved",
-        businessName: job.businessName || "",
-        representativeName: job.representativeName || "",
-        businessNumber: job.businessNumber || "",
-        contact: job.businessContact || "",
-        businessEmail: job.businessEmail || "",
-        businessAddress: job.businessAddress || "",
-        stampDataUrl: job.stampDataUrl || ""
-      },
+      issuerBusinessId: "head-office",
+      issuerBusinessSnapshot: null,
       workContent: job.workContent || "",
       result: job.result || "",
       asPeriod: job.asPeriod || "1년",
@@ -891,10 +873,10 @@ function App() {
 
       const selectedBusiness = resolveDocumentBusiness(
         profile,
-        isAdmin ? form.issuerBusinessId || "own" : "head-office",
-        isAdmin ? form.issuerBusinessSnapshot : null,
+        "head-office",
+        null,
         allProfiles,
-        !isAdmin
+        true
       );
 
       const dailySequence = editingJob?.dailySequence || (() => {
@@ -916,7 +898,7 @@ function App() {
         assignedWorkerUid: assignedOwnerUid,
         assignedWorkerEmail: assignedOwnerEmail,
         dailySequence,
-        issuerBusinessId: selectedBusiness.id || "own",
+        issuerBusinessId: "head-office",
         issuerBusinessSnapshot: selectedBusiness,
         chargeAmount,
         baseChargeAmount,
