@@ -129,7 +129,13 @@ export default function JobForm({
 
   const showStep = (targetStep) => !easyMode || step === targetStep;
 
-  const paymentTotal = Object.values(form.paymentBreakdown || {}).reduce(
+  const safePaymentBreakdown = form.paymentBreakdown || {
+    cash: "",
+    transfer: "",
+    card: "",
+    invoice: ""
+  };
+  const paymentTotal = Object.values(safePaymentBreakdown).reduce(
     (sum, value) => sum + (Number(value) || 0),
     0
   );
@@ -358,6 +364,16 @@ export default function JobForm({
                   />
                 </Field>
 
+                <Field label="방문시간">
+                  <input
+                    type="time"
+                    value={form.visitTime || ""}
+                    onChange={(event) =>
+                      setForm({ ...form, visitTime: event.target.value })
+                    }
+                  />
+                </Field>
+
                 <Field label="실제 작업자">
                   {canAssignWorker && !editingJob ? (
                     <select
@@ -426,6 +442,7 @@ export default function JobForm({
                 leakData={leakData}
                 setLeakData={setLeakData}
                 job={form}
+                setJob={setForm}
               />
             ) : (
               <WorkTemplateEngine

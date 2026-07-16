@@ -416,6 +416,35 @@ function App() {
     []
   );
 
+
+  useEffect(() => {
+    if (!user) return undefined;
+
+    window.history.pushState({ gwOne: true }, "", window.location.href);
+
+    const handleBack = () => {
+      if (view !== "dashboard") {
+        setSelectedJob(null);
+        setDocumentType(null);
+        setView("dashboard");
+        window.history.pushState({ gwOne: true }, "", window.location.href);
+        return;
+      }
+
+      const shouldExit = window.confirm("GW ONE을 종료하시겠습니까?");
+      if (shouldExit) {
+        window.removeEventListener("popstate", handleBack);
+        window.history.back();
+        return;
+      }
+
+      window.history.pushState({ gwOne: true }, "", window.location.href);
+    };
+
+    window.addEventListener("popstate", handleBack);
+    return () => window.removeEventListener("popstate", handleBack);
+  }, [user, view]);
+
   const enableJobNotifications = async () => {
     if (!("Notification" in window)) {
       setNotice("이 기기에서는 브라우저 알림을 지원하지 않습니다.");
@@ -431,20 +460,7 @@ function App() {
       setNotice("브라우저에서 알림 권한이 허용되지 않았습니다.");
     }
   };
-
-  useEffect(() => {
-    if (!user || editingJob || view !== "form") return;
-    const timer = setTimeout(() => {
-      localStorage.setItem(
-        `gw-one-draft-${user.uid}`,
-        JSON.stringify({ form, leakData, savedAt: Date.now() })
-      );
-      setDraftReady(true);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [user, editingJob, view, form, leakData]);
-
-  const restoreDraft = () => {
+const restoreDraft = () => {
     if (!user) return false;
     const raw = localStorage.getItem(`gw-one-draft-${user.uid}`);
     if (!raw) return false;
@@ -463,7 +479,7 @@ function App() {
 
   const clearDraft = () => {
     if (user) localStorage.removeItem(`gw-one-draft-${user.uid}`);
-    setDraftReady(false);
+    
   };
 
   const filteredJobs = useMemo(() => {
@@ -626,11 +642,7 @@ function App() {
 
   const openNewJobForm = () => {
     if (user) {
-      const raw = localStorage.getItem(`gw-one-draft-${user.uid}`);
-      if (raw && window.confirm("작성 중이던 작업이 있습니다. 이어서 작성할까요?")) {
-        restoreDraft();
-        return;
-      }
+      localStorage.removeItem(`gw-one-draft-${user.uid}`);
     }
 
     setEditingJob(null);
@@ -718,6 +730,7 @@ function App() {
     setEditingJob(job);
     setForm({
       workDate: job.workDate || new Date().toISOString().slice(0, 10),
+      visitTime: job.visitTime || "",
       phone: job.phone || "",
       address: job.address || "",
       jobType: job.jobType || "누수탐지",

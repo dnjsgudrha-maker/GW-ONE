@@ -4132,3 +4132,75 @@ button { cursor: pointer; }
   font-weight: 800;
   line-height: 1.45;
 }
+
+
+/* GW ONE v5.0 현장 완성 */
+.apply-leak-work-button {
+  width: 100%;
+  min-height: 52px;
+  margin: 12px 0;
+  border: 0;
+  border-radius: 12px;
+  background: #155eef;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.worker-status-card {
+  width: 100%;
+  border: 1px solid #e4e7ec;
+  text-align: left;
+}
+
+.worker-status-card.active {
+  border-color: #155eef;
+  background: #eef4ff;
+}
+
+.today-worker-jobs-panel {
+  margin-top: 12px;
+}
+
+.today-worker-job-list {
+  display: grid;
+  gap: 8px;
+}
+
+.today-worker-job-list button {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e4e7ec;
+  border-radius: 11px;
+  background: #fff;
+  text-align: left;
+}
+
+.today-worker-job-list button > strong {
+  color: #155eef;
+  font-size: 15px;
+}
+
+.today-worker-job-list span,
+.today-worker-job-list small {
+  display: block;
+}
+
+.today-worker-job-list small {
+  margin-top: 3px;
+  color: #667085;
+}
+
+@media (max-width: 520px) {
+  .today-worker-job-list button {
+    grid-template-columns: auto 1fr;
+  }
+
+  .today-worker-job-list button > b {
+    grid-column: 2;
+  }
+}

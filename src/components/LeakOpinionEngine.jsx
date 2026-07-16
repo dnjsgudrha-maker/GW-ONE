@@ -26,7 +26,8 @@ function OptionGroup({ title, options, selected, onToggle }) {
 export default function LeakOpinionEngine({
   leakData,
   setLeakData,
-  job
+  job,
+  setJob
 }) {
   const toggle = (key, item) => {
     const selected = leakData[key] || [];
@@ -131,6 +132,25 @@ export default function LeakOpinionEngine({
         />
       </Field>
 
+
+
+      <button
+        type="button"
+        className="apply-leak-work-button"
+        onClick={() => {
+          const text = String(leakData.opinionText || generated || "").trim();
+          if (!text) return;
+
+          setJob((current) => ({
+            ...current,
+            workContent: current.workContent?.trim()
+              ? `${current.workContent.trim()}\n${text}`
+              : text
+          }));
+        }}
+      >
+        작업내용에 반영
+      </button>
       <div className="leak-opinion-preview">
         <div>
           <strong>자동 생성 소견서</strong>

@@ -75,10 +75,11 @@ function WorkReport({ job }) {
       <section className="doc-section">
         <h3>기본 정보</h3>
         <InfoRow label="작업일" value={job.workDate} />
+        <InfoRow label="방문시간" value={job.visitTime || "-"} />
         <InfoRow label="현장주소" value={job.address} />
         <InfoRow label="연락처" value={job.phone} />
         <InfoRow label="작업종류" value={job.jobType} />
-        <InfoRow label="작업자" value={job.worker} />
+        <InfoRow label="담당기사" value={job.worker} />
         <InfoRow
           label="사용장비"
           value={job.equipment?.length ? job.equipment.join(", ") : "-"}
@@ -132,8 +133,9 @@ function Opinion({ job }) {
 
       <section className="doc-section">
         <InfoRow label="작성일" value={job.workDate} />
+        <InfoRow label="방문시간" value={job.visitTime || "-"} />
         <InfoRow label="현장주소" value={job.address} />
-        <InfoRow label="작업자" value={job.worker} />
+        <InfoRow label="담당기사" value={job.worker} />
       </section>
 
       <DocumentPhotos job={job} />

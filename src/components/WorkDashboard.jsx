@@ -19,6 +19,7 @@ export default function WorkDashboard({
   onCreateJob
 }) {
   const [workerFilter, setWorkerFilter] = useState("전체");
+  const [todayWorkerFilter, setTodayWorkerFilter] = useState("전체");
   const today = new Date().toISOString().slice(0, 10);
   const month = today.slice(0, 7);
 
@@ -78,11 +79,28 @@ export default function WorkDashboard({
 
     const latest = [...latestSource]
       .sort((a, b) => {
-        const aDate = String(a.workDate || "");
-        const bDate = String(b.workDate || "");
-        return bDate.localeCompare(aDate);
+        const aKey = `${String(a.workDate || "")} ${String(
+          a.visitTime || "00:00"
+        )}`;
+        const bKey = `${String(b.workDate || "")} ${String(
+          b.visitTime || "00:00"
+        )}`;
+        return bKey.localeCompare(aKey);
       })
       .slice(0, 12);
+
+    const selectedTodayJobs = todayJobs
+      .filter((job) => {
+        if (todayWorkerFilter === "전체") return true;
+        const owner =
+          job.ownerUid || job.ownerEmail || job.worker || "미지정";
+        return owner === todayWorkerFilter;
+      })
+      .sort((a, b) =>
+        String(a.visitTime || "00:00").localeCompare(
+          String(b.visitTime || "00:00")
+        )
+      );
 
     return {
       todayJobs,
@@ -90,10 +108,11 @@ export default function WorkDashboard({
       todayAmount,
       monthAmount,
       workers: [...workers.values()].sort((a, b) => b.count - a.count),
+      selectedTodayJobs,
       latest,
       upcomingFollowUps
     };
-  }, [jobs, today, month, workerFilter]);
+  }, [jobs, today, month, workerFilter, todayWorkerFilter]);
 
   const profileMap = useMemo(() => {
     const map = new Map();
@@ -156,7 +175,19 @@ export default function WorkDashboard({
                 const profile = profileMap.get(worker.key);
 
                 return (
-                  <div className="worker-status-card" key={worker.key}>
+                  <button
+                    type="button"
+                    className={[
+                      "worker-status-card",
+                      todayWorkerFilter === worker.key ? "active" : ""
+                    ].join(" ")}
+                    key={worker.key}
+                    onClick={() =>
+                      setTodayWorkerFilter((current) =>
+                        current === worker.key ? "전체" : worker.key
+                      )
+                    }
+                  >
                     <div>
                       <strong>
                         {profile?.representativeName ||
@@ -169,7 +200,7 @@ export default function WorkDashboard({
                       <strong>{worker.count}건</strong>
                       <span>{formatWon(worker.amount)}</span>
                     </div>
-                  </div>
+                  </button>
                 );
               })
             )}
@@ -177,6 +208,32 @@ export default function WorkDashboard({
         </section>
       )}
 
+      {currentRole !== "기사" && todayWorkerFilter !== "전체" && (
+        <section className="panel today-worker-jobs-panel">
+          <div className="panel-title">
+            <h2>선택 기사 오늘 작업</h2>
+            <span className="dashboard-count">
+              {data.selectedTodayJobs.length}건
+            </span>
+          </div>
+          <div className="today-worker-job-list">
+            {data.selectedTodayJobs.map((job) => (
+              <button
+                type="button"
+                key={`${job.ownerUid || ""}-${job.id}`}
+                onClick={() => onOpenJob(job)}
+              >
+                <strong>{job.visitTime || "시간 미입력"}</strong>
+                <div>
+                  <span>{job.address}</span>
+                  <small>{job.jobType} · {job.worker || "담당기사 미입력"}</small>
+                </div>
+                <b>{formatWon(job.chargeAmount)}</b>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {data.upcomingFollowUps.length > 0 && (
         <section className="panel followup-panel">
@@ -249,7 +306,7 @@ export default function WorkDashboard({
                     <span className="badge">{job.jobType}</span>
                     <strong>{job.address}</strong>
                     <small>
-                      {job.workDate} · {job.worker || job.ownerEmail || "작업자 미입력"}
+                      {job.workDate} {job.visitTime || ""} · {job.worker || job.ownerEmail || "담당기사 미입력"}
                     </small>
                   </div>
                   <strong>{formatWon(job.chargeAmount)}</strong>

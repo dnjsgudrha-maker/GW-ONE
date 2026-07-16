@@ -47,6 +47,7 @@ export const initialProfile = {
 
 export const createInitialForm = () => ({
   workDate: new Date().toISOString().slice(0, 10),
+  visitTime: new Date().toTimeString().slice(0, 5),
   phone: "",
   address: "",
   jobType: "누수탐지",

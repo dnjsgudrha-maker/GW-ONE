@@ -68,10 +68,11 @@ export default function JobModal({
 
         <div className="detail-grid">
           <Detail label="작업일" value={job.workDate} />
+          <Detail label="방문시간" value={job.visitTime || "-"} />
           <Detail label="업체명" value={job.businessName || "-"} />
           <Detail label="대표자" value={job.representativeName || "-"} />
           <Detail label="연락처" value={job.phone || "-"} />
-          <Detail label="작업자" value={job.worker || "-"} />
+          <Detail label="담당기사" value={job.worker || "-"} />
           <Detail
             label="사용장비"
             value={job.equipment?.length ? job.equipment.join(", ") : "-"}
