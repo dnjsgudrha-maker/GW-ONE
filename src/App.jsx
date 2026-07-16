@@ -640,7 +640,9 @@ function App() {
         profile.representativeName ||
         user.displayName ||
         current.worker ||
-        ""
+        "",
+      assignedWorkerUid: "",
+      assignedWorkerEmail: ""
     }));
     setLeakData(createInitialLeakData());
     setBeforePhotos([]);
@@ -659,6 +661,8 @@ function App() {
       address: job.address || "",
       jobType: job.jobType || "누수탐지",
       worker: job.worker || "",
+      assignedWorkerUid: job.ownerUid || job.assignedWorkerUid || "",
+      assignedWorkerEmail: job.ownerEmail || job.assignedWorkerEmail || "",
       issuerBusinessId: job.issuerBusinessId || "own",
       issuerBusinessSnapshot: job.issuerBusinessSnapshot || {
         id: job.issuerBusinessId || "saved",
@@ -727,6 +731,8 @@ function App() {
       address: job.address || "",
       jobType: job.jobType || "누수탐지",
       worker: job.worker || "",
+      assignedWorkerUid: job.ownerUid || job.assignedWorkerUid || "",
+      assignedWorkerEmail: job.ownerEmail || job.assignedWorkerEmail || "",
       issuerBusinessId: job.issuerBusinessId || "own",
       issuerBusinessSnapshot: job.issuerBusinessSnapshot || {
         id: job.issuerBusinessId || "saved",
@@ -856,6 +862,33 @@ function App() {
       const afterPhotoUrls = photoUrls(afterPhotos);
       const videoUrls = mediaUrls(videos);
 
+      const assignedProfile =
+        isAdmin && form.assignedWorkerUid
+          ? allProfiles.find(
+              (item) => item.uid === form.assignedWorkerUid
+            )
+          : null;
+
+      const assignedOwnerUid =
+        editingJob?.ownerUid ||
+        assignedProfile?.uid ||
+        user.uid;
+
+      const assignedOwnerEmail =
+        editingJob?.ownerEmail ||
+        assignedProfile?.email ||
+        user.email ||
+        "";
+
+      const assignedWorkerName =
+        editingJob?.worker ||
+        assignedProfile?.representativeName ||
+        assignedProfile?.businessName ||
+        form.worker ||
+        profile.representativeName ||
+        user.displayName ||
+        "작업자";
+
       const selectedBusiness = resolveDocumentBusiness(
         profile,
         isAdmin ? form.issuerBusinessId || "own" : "head-office",
@@ -865,10 +898,10 @@ function App() {
       );
 
       const dailySequence = editingJob?.dailySequence || (() => {
-        const sameDayWorkerJobs = jobs.filter(
+        const sameDayWorkerJobs = (isAdmin ? allJobs : jobs).filter(
           (job) =>
             job.workDate === form.workDate &&
-            String(job.worker || "").trim() === String(form.worker || "").trim()
+            (job.ownerUid || job.assignedWorkerUid) === assignedOwnerUid
         );
         const maxSequence = sameDayWorkerJobs.reduce(
           (max, job) => Math.max(max, Number(job.dailySequence || 0)),
@@ -879,6 +912,9 @@ function App() {
 
       const commonData = {
         ...form,
+        worker: assignedWorkerName,
+        assignedWorkerUid: assignedOwnerUid,
+        assignedWorkerEmail: assignedOwnerEmail,
         dailySequence,
         issuerBusinessId: selectedBusiness.id || "own",
         issuerBusinessSnapshot: selectedBusiness,
@@ -920,8 +956,18 @@ function App() {
         leakData: form.jobType === "누수탐지" ? leakData : null,
         leakOpinion:
           form.jobType === "누수탐지" ? leakData.opinionText || "" : "",
-        ownerUid: user.uid,
-        ownerEmail: user.email || "",
+        ownerUid: assignedOwnerUid,
+        ownerEmail: assignedOwnerEmail,
+        createdByUid: editingJob?.createdByUid || user.uid,
+        createdByEmail: editingJob?.createdByEmail || user.email || "",
+        createdByName:
+          editingJob?.createdByName ||
+          profile.representativeName ||
+          user.displayName ||
+          user.email ||
+          "작성자",
+        updatedByUid: user.uid,
+        updatedByEmail: user.email || "",
         updatedAt: serverTimestamp()
       };
 
@@ -950,7 +996,7 @@ function App() {
         );
       } else {
         const createdJobRef = await addDoc(
-          collection(db, "users", user.uid, "jobs"),
+          collection(db, "users", assignedOwnerUid, "jobs"),
           {
             ...commonData,
             beforePhotoUrls,
@@ -971,11 +1017,11 @@ function App() {
         try {
           await addDoc(collection(db, "jobNotifications"), {
             jobId: createdJobRef.id,
-            ownerUid: user.uid,
+            ownerUid: assignedOwnerUid,
             actorUid: user.uid,
             actorEmail: user.email || "",
             actorName:
-              form.worker ||
+              assignedWorkerName ||
               profile.representativeName ||
               user.displayName ||
               "작업자",
@@ -991,7 +1037,12 @@ function App() {
 
       setForm((current) => ({
         ...createInitialForm(),
-        worker: current.worker,
+        worker:
+          profile.representativeName ||
+          user.displayName ||
+          current.worker,
+        assignedWorkerUid: "",
+        assignedWorkerEmail: "",
         baseChargeAmount: "",
         materialCost: "",
         collectionStatus: "collected",

@@ -4121,3 +4121,14 @@ button { cursor: pointer; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* GW ONE v4.4.2 최고관리자 기사 대신 작성 */
+.worker-assignment-guide {
+  display: block;
+  margin-top: 7px;
+  color: #6941c6;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.45;
+}

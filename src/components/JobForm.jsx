@@ -79,7 +79,22 @@ export default function JobForm({
     businessOptions[0];
 
   const canSelectBusiness = currentRole === "최고관리자";
+  const canAssignWorker = currentRole === "최고관리자";
   const headOfficeBusiness = headOfficeBusinessFromProfile(profile);
+  const workerOptions = (allProfiles || [])
+    .filter(
+      (item) =>
+        item?.uid &&
+        item?.approved !== false &&
+        item?.disabled !== true &&
+        (item.role || "기사") === "기사"
+    )
+    .sort((a, b) =>
+      String(a.representativeName || a.email || "").localeCompare(
+        String(b.representativeName || b.email || ""),
+        "ko"
+      )
+    );
 
   useEffect(() => {
     localStorage.setItem("gw-one-easy-mode", easyMode ? "on" : "off");
@@ -413,14 +428,53 @@ export default function JobForm({
                   />
                 </Field>
 
-                <Field label="작업자">
-                  <input
-                    value={form.worker}
-                    onChange={(event) =>
-                      setForm({ ...form, worker: event.target.value })
-                    }
-                    placeholder="자동 입력"
-                  />
+                <Field label="실제 작업자">
+                  {canAssignWorker && !editingJob ? (
+                    <select
+                      value={form.assignedWorkerUid || ""}
+                      onChange={(event) => {
+                        const selected = workerOptions.find(
+                          (item) => item.uid === event.target.value
+                        );
+
+                        setForm((current) => ({
+                          ...current,
+                          assignedWorkerUid: selected?.uid || "",
+                          assignedWorkerEmail: selected?.email || "",
+                          worker:
+                            selected?.representativeName ||
+                            selected?.businessName ||
+                            selected?.email ||
+                            profile.representativeName ||
+                            ""
+                        }));
+                      }}
+                    >
+                      <option value="">내 작업으로 작성</option>
+                      {workerOptions.map((worker) => (
+                        <option key={worker.uid} value={worker.uid}>
+                          {worker.representativeName ||
+                            worker.businessName ||
+                            worker.email}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      value={form.worker}
+                      readOnly={currentRole !== "최고관리자" || Boolean(editingJob)}
+                      onChange={(event) =>
+                        setForm({ ...form, worker: event.target.value })
+                      }
+                      placeholder="자동 입력"
+                    />
+                  )}
+
+                  {canAssignWorker && !editingJob && (
+                    <small className="worker-assignment-guide">
+                      기사를 선택하면 해당 기사 작업목록에 저장됩니다.
+                    </small>
+                  )}
                 </Field>
               </div>
             </div>

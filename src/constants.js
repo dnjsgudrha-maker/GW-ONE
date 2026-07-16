@@ -51,6 +51,8 @@ export const createInitialForm = () => ({
   address: "",
   jobType: "누수탐지",
   worker: "",
+  assignedWorkerUid: "",
+  assignedWorkerEmail: "",
   issuerBusinessId: "own",
   issuerBusinessSnapshot: null,
   workContent: "",
