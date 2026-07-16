@@ -72,10 +72,10 @@ export default function JobForm({
   const [saveError, setSaveError] = useState("");
   const businessOptions = getDocumentBusinesses(profile, allProfiles);
   const selectedBusiness =
+    form.issuerBusinessSnapshot ||
     businessOptions.find(
       (business) => business.id === (form.issuerBusinessId || "own")
     ) ||
-    form.issuerBusinessSnapshot ||
     businessOptions[0];
 
   const canSelectBusiness = currentRole === "최고관리자";
@@ -326,17 +326,24 @@ export default function JobForm({
               <div className="document-business-select-box">
                 <Field label="문서에 표시할 상호">
                   <select
-                    value={form.issuerBusinessId || "own"}
+                    value={
+                      form.issuerBusinessSnapshot?.id ||
+                      form.issuerBusinessId ||
+                      "own"
+                    }
                     onChange={(event) => {
+                      const nextId = event.target.value;
                       const business = businessOptions.find(
-                        (item) => item.id === event.target.value
+                        (item) => item.id === nextId
                       );
 
-                      setForm({
-                        ...form,
-                        issuerBusinessId: event.target.value,
-                        issuerBusinessSnapshot: business || null
-                      });
+                      setForm((current) => ({
+                        ...current,
+                        issuerBusinessId: nextId,
+                        issuerBusinessSnapshot: business
+                          ? { ...business }
+                          : null
+                      }));
                     }}
                   >
                     {businessOptions.map((business) => (
@@ -392,10 +399,6 @@ export default function JobForm({
                       {headOfficeBusiness.representativeName || "미입력"}
                     </strong>
                   </div>
-                  <p>
-                    기사·대표 계정의 문서는 본사 업체정보와 본사 직인으로 발행됩니다.
-                    작업자 이름은 현재 로그인한 작업자로 표시됩니다.
-                  </p>
                 </div>
               )}
 

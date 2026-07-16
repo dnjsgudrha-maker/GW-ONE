@@ -340,6 +340,62 @@ export default function PaymentBox({
         </p>
       </div>
 
+
+      <div className="collection-status-box">
+        <Field label="수금상태">
+          <div className="collection-status-buttons">
+            <button
+              type="button"
+              className={
+                (form.collectionStatus || "collected") === "collected"
+                  ? "active collected"
+                  : ""
+              }
+              onClick={() =>
+                setForm({
+                  ...form,
+                  collectionStatus: "collected",
+                  collectionMemo: ""
+                })
+              }
+            >
+              🟢 수금완료
+            </button>
+            <button
+              type="button"
+              className={
+                form.collectionStatus === "uncollected"
+                  ? "active uncollected"
+                  : ""
+              }
+              onClick={() =>
+                setForm({
+                  ...form,
+                  collectionStatus: "uncollected"
+                })
+              }
+            >
+              🟡 미수
+            </button>
+          </div>
+        </Field>
+
+        {form.collectionStatus === "uncollected" && (
+          <Field label="미수 메모(선택)">
+            <input
+              value={form.collectionMemo || ""}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  collectionMemo: event.target.value.slice(0, 80)
+                })
+              }
+              placeholder="예: 월말 결제, 담당자 확인 중"
+            />
+          </Field>
+        )}
+      </div>
+
       <div className="split-payment-box">
         <div className="easy-payment-guide">
           <strong>어떻게 받았나요?</strong>

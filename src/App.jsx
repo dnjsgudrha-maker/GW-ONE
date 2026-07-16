@@ -61,6 +61,7 @@ import MonthlySettlement from "./components/MonthlySettlement";
 import UserManagement from "./components/UserManagement";
 import PendingScreen from "./components/PendingScreen";
 import WorkDashboard from "./components/WorkDashboard";
+import CollectionManagement from "./components/CollectionManagement";
 import MoreMenu from "./components/MoreMenu";
 import ProfilePage from "./components/ProfilePage";
 import NetworkBanner from "./components/NetworkBanner";
@@ -680,6 +681,9 @@ function App() {
       chargeAmount: String(job.chargeAmount || ""),
       baseChargeAmount: String(job.baseChargeAmount || job.chargeAmount || ""),
       materialCost: String(job.materialCost || ""),
+      collectionStatus: job.collectionStatus || "collected",
+      collectionMemo: job.collectionMemo || "",
+      collectionCompletedAt: job.collectionCompletedAt || "",
       taxAddedPayment: job.taxAddedPayment || "",
       commissionType:
         job.commissionType ||
@@ -745,6 +749,9 @@ function App() {
       chargeAmount: String(job.chargeAmount || ""),
       baseChargeAmount: String(job.baseChargeAmount || job.chargeAmount || ""),
       materialCost: String(job.materialCost || ""),
+      collectionStatus: job.collectionStatus || "collected",
+      collectionMemo: job.collectionMemo || "",
+      collectionCompletedAt: job.collectionCompletedAt || "",
       taxAddedPayment: job.taxAddedPayment || "",
       commissionType:
         job.commissionType ||
@@ -884,6 +891,15 @@ function App() {
         commissionBaseAmount,
         commissionAmount,
         netAmount,
+        collectionStatus: form.collectionStatus || "collected",
+        collectionMemo:
+          form.collectionStatus === "uncollected"
+            ? String(form.collectionMemo || "").trim()
+            : "",
+        collectionCompletedAt:
+          form.collectionStatus === "collected"
+            ? editingJob?.collectionCompletedAt || serverTimestamp()
+            : null,
         paymentBreakdown,
         paymentTotal,
         paymentDifference: chargeAmount - paymentTotal,
@@ -978,6 +994,9 @@ function App() {
         worker: current.worker,
         baseChargeAmount: "",
         materialCost: "",
+        collectionStatus: "collected",
+        collectionMemo: "",
+        collectionCompletedAt: "",
         taxAddedPayment: "",
         commissionType: current.commissionType || "percent",
         commissionRate: current.commissionRate || "30",
@@ -1189,6 +1208,41 @@ function App() {
     }
   };
 
+
+  const handleMarkCollected = async (job) => {
+    if (!(isAdmin || profile.role === "대표")) {
+      setNotice("수금완료 처리는 최고관리자 또는 대표만 가능합니다.");
+      return;
+    }
+
+    try {
+      const ownerUid = job.ownerUid || user.uid;
+
+      await updateDoc(
+        doc(db, "users", ownerUid, "jobs", job.id),
+        {
+          collectionStatus: "collected",
+          collectionCompletedAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }
+      );
+
+      setSelectedJob((current) =>
+        current?.id === job.id
+          ? {
+              ...current,
+              collectionStatus: "collected",
+              collectionCompletedAt: new Date().toISOString()
+            }
+          : current
+      );
+
+      setNotice("수금완료로 처리했습니다.");
+    } catch (error) {
+      setNotice(`수금완료 처리에 실패했습니다: ${error.message}`);
+    }
+  };
+
   const currentRole = isAdmin ? "최고관리자" : profile.role || "기사";
   const canViewSettlement = true;
   const canManageUsers = currentRole === "최고관리자";
@@ -1343,6 +1397,7 @@ function App() {
             onOpenCustomers={() => setView("customers")}
             onOpenSettlement={() => setView("settlement")}
             onOpenUsers={() => setView("users")}
+            onOpenCollection={() => setView("collection")}
             onOpenProfile={() => setView("profile")}
             onOpenHelp={() => setView("help")}
             onInstall={installApp}
@@ -1358,6 +1413,14 @@ function App() {
             onEnableNotifications={enableJobNotifications}
             notificationPermission={notificationPermission}
             installAvailable={Boolean(deferredInstallPrompt)}
+          />
+        )}
+
+        {view === "collection" && currentRole !== "기사" && (
+          <CollectionManagement
+            jobs={allJobs}
+            onOpenJob={setSelectedJob}
+            onMarkCollected={handleMarkCollected}
           />
         )}
 
@@ -1423,6 +1486,8 @@ function App() {
             isAdmin || (selectedJob.ownerUid || user.uid) === user.uid
           }
           isSuperAdmin={isAdmin}
+          canManageCollection={isAdmin || profile.role === "대표"}
+          onMarkCollected={handleMarkCollected}
           onNotice={setNotice}
           onOpenDocument={setDocumentType}
           onEdit={() => startEditJob(selectedJob)}

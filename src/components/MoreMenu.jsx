@@ -3,6 +3,7 @@ export default function MoreMenu({
   onOpenCustomers,
   onOpenSettlement,
   onOpenUsers,
+  onOpenCollection,
   onOpenProfile,
   onOpenHelp,
   onInstall,
@@ -42,6 +43,14 @@ export default function MoreMenu({
                 ? "내 작업금액·자재비"
                 : "전체 작업금액·자재비"}
             </small>
+          </button>
+        )}
+
+        {role !== "기사" && (
+          <button onClick={onOpenCollection}>
+            <span>💰</span>
+            <strong>수금관리</strong>
+            <small>미수·수금완료 관리</small>
           </button>
         )}
 
@@ -103,7 +112,7 @@ export default function MoreMenu({
       </div>
 
       <div className="version-box">
-        <strong>GW ONE v4.1</strong>
+        <strong>GW ONE v4.4.1</strong>
         <span>현장 실사용 완성 버전</span>
       </div>
     </section>

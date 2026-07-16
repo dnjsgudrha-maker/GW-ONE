@@ -6,8 +6,11 @@ function completedDate(value) {
   if (typeof value?.toDate === "function") {
     return value.toDate().toLocaleString("ko-KR");
   }
+
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("ko-KR");
+  return Number.isNaN(date.getTime())
+    ? "-"
+    : date.toLocaleString("ko-KR");
 }
 
 export default function CollectionManagement({
@@ -19,9 +22,10 @@ export default function CollectionManagement({
   const [search, setSearch] = useState("");
 
   const summary = useMemo(() => {
-    const uncollected = jobs.filter(
+    const uncollected = (jobs || []).filter(
       (job) => job.collectionStatus === "uncollected"
     );
+
     return {
       count: uncollected.length,
       amount: uncollected.reduce(
@@ -34,9 +38,10 @@ export default function CollectionManagement({
   const visible = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
-    return [...jobs]
+    return [...(jobs || [])]
       .filter((job) => {
         const status = job.collectionStatus || "collected";
+
         if (filter !== "all" && status !== filter) return false;
         if (!keyword) return true;
 
@@ -44,7 +49,6 @@ export default function CollectionManagement({
           job.address,
           job.phone,
           job.worker,
-          job.businessName,
           job.jobType,
           job.collectionMemo
         ]
@@ -63,7 +67,7 @@ export default function CollectionManagement({
       <div className="panel-title">
         <div>
           <h2>수금관리</h2>
-          <p>입금예정일 없이 미수와 실제 수금완료만 관리합니다.</p>
+          <p>미수와 실제 수금완료 상태를 관리합니다.</p>
         </div>
       </div>
 
@@ -99,6 +103,7 @@ export default function CollectionManagement({
             전체
           </button>
         </div>
+
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
@@ -111,10 +116,14 @@ export default function CollectionManagement({
           <div className="empty">해당하는 작업이 없습니다.</div>
         ) : (
           visible.map((job) => {
-            const uncollected = job.collectionStatus === "uncollected";
+            const isUncollected =
+              job.collectionStatus === "uncollected";
 
             return (
-              <article className="collection-card" key={`${job.ownerUid}-${job.id}`}>
+              <article
+                className="collection-card"
+                key={`${job.ownerUid || ""}-${job.id}`}
+              >
                 <button
                   type="button"
                   className="collection-card-main"
@@ -123,19 +132,17 @@ export default function CollectionManagement({
                   <div>
                     <strong>{job.workDate} · {job.jobType}</strong>
                     <span>{job.address}</span>
-                    <small>
-                      {job.worker || "작업자 미입력"} · {job.paymentMethod || "결제수단 미입력"}
-                    </small>
+                    <small>{job.worker || "작업자 미입력"}</small>
                   </div>
                   <strong>{formatWon(job.chargeAmount)}</strong>
                 </button>
 
                 <div className="collection-card-footer">
-                  <span className={uncollected ? "uncollected" : "collected"}>
-                    {uncollected ? "🟡 미수" : "🟢 수금완료"}
+                  <span className={isUncollected ? "uncollected" : "collected"}>
+                    {isUncollected ? "🟡 미수" : "🟢 수금완료"}
                   </span>
 
-                  {uncollected ? (
+                  {isUncollected ? (
                     <button
                       type="button"
                       className="mark-collected-button"

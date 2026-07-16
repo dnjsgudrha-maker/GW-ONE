@@ -3953,3 +3953,171 @@ button { cursor: pointer; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* GW ONE v4.4.1 수금관리 */
+.collection-status-box {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #f0cf9a;
+  border-radius: 14px;
+  background: #fffaf1;
+}
+
+.collection-status-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+}
+
+.collection-status-buttons button {
+  min-height: 50px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  background: #fff;
+  font-weight: 900;
+}
+
+.collection-status-buttons button.active.collected {
+  border-color: #53b27c;
+  background: #edfff4;
+  color: #087443;
+}
+
+.collection-status-buttons button.active.uncollected {
+  border-color: #e6a700;
+  background: #fff8dc;
+  color: #8a5b00;
+}
+
+.collection-page .panel-title p {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+.collection-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.collection-summary > div {
+  padding: 16px;
+  border: 1px solid #f0c36d;
+  border-radius: 14px;
+  background: #fff8e8;
+}
+
+.collection-summary span,
+.collection-summary strong {
+  display: block;
+}
+
+.collection-summary strong {
+  margin-top: 6px;
+  color: #9a6700;
+  font-size: 22px;
+}
+
+.collection-toolbar,
+.collection-list {
+  display: grid;
+  gap: 10px;
+}
+
+.collection-toolbar {
+  margin-bottom: 14px;
+}
+
+.collection-filter-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.collection-filter-buttons button {
+  min-height: 42px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 800;
+}
+
+.collection-filter-buttons button.active {
+  border-color: #155eef;
+  background: #eef4ff;
+  color: #155eef;
+}
+
+.collection-card {
+  overflow: hidden;
+  border: 1px solid #d8e0ea;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.collection-card-main {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.collection-card-main span,
+.collection-card-main small {
+  display: block;
+  margin-top: 5px;
+  color: #667085;
+}
+
+.collection-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-top: 1px solid #eef1f5;
+  background: #f8fafc;
+}
+
+.mark-collected-button,
+.mark-collected-detail-button {
+  border: 0;
+  border-radius: 10px;
+  background: #12874f;
+  color: #fff;
+  font-weight: 900;
+}
+
+.mark-collected-button {
+  padding: 9px 12px;
+}
+
+.mark-collected-detail-button {
+  width: 100%;
+  margin: 10px 0;
+  padding: 14px;
+}
+
+.collection-memo {
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px dashed #e0b24c;
+  background: #fffdf4;
+  color: #7a5800;
+  font-size: 12px;
+}
+
+@media (max-width: 560px) {
+  .collection-status-buttons,
+  .collection-summary {
+    grid-template-columns: 1fr;
+  }
+}

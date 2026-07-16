@@ -58,7 +58,14 @@ function businessKey(business = {}) {
 export function getDocumentBusinesses(profile = {}, allProfiles = []) {
   const own = ownBusinessFromProfile(profile);
   const extras = Array.isArray(profile.documentBusinesses)
-    ? profile.documentBusinesses.filter((item) => item?.businessName)
+    ? profile.documentBusinesses
+        .filter((item) => item?.businessName)
+        .map((item, index) => ({
+          ...item,
+          id:
+            item.id ||
+            `extra-${String(item.businessNumber || "").replace(/\D/g, "") || index}`
+        }))
     : [];
 
   const workerBusinesses = Array.isArray(allProfiles)
@@ -95,6 +102,10 @@ export function resolveDocumentBusiness(
 ) {
   if (useHeadOffice) {
     return headOfficeBusinessFromProfile(profile);
+  }
+
+  if (fallback?.businessName && fallback.id === businessId) {
+    return fallback;
   }
 
   const found = getDocumentBusinesses(profile, allProfiles).find(

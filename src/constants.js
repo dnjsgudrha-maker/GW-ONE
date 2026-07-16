@@ -68,6 +68,9 @@ export const createInitialForm = () => ({
   commissionType: "percent",
   commissionRate: "30",
   commissionFixedAmount: "",
+  collectionStatus: "collected",
+  collectionMemo: "",
+  collectionCompletedAt: "",
   paymentMethod: "계좌입금",
   paymentBreakdown: {
     cash: "",
