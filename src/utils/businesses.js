@@ -18,8 +18,14 @@ export function headOfficeBusinessFromProfile(profile = {}) {
 
   if (saved?.businessName) {
     return {
-      ...saved,
       id: saved.id || "head-office",
+      businessName: saved.businessName || "",
+      representativeName: saved.representativeName || "",
+      businessNumber: saved.businessNumber || "",
+      contact: saved.contact || "",
+      businessEmail: saved.businessEmail || "",
+      businessAddress: saved.businessAddress || "",
+      stampDataUrl: saved.stampDataUrl || "",
       isHeadOffice: true
     };
   }
@@ -85,11 +91,12 @@ export function resolveDocumentBusiness(
   businessId,
   fallback = null,
   allProfiles = [],
-  forceHeadOffice = false
+  useHeadOffice = false
 ) {
-  if (forceHeadOffice) {
+  if (useHeadOffice) {
     return headOfficeBusinessFromProfile(profile);
   }
+
   const found = getDocumentBusinesses(profile, allProfiles).find(
     (item) => item.id === businessId
   );

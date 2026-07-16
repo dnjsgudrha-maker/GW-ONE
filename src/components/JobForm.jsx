@@ -9,7 +9,7 @@ import ProfileBox from "./ProfileBox";
 import LeakOpinionEngine from "./LeakOpinionEngine";
 import WorkTemplateEngine from "./WorkTemplateEngine";
 import { formatWon, normalizePhone } from "../utils/formatters";
-import { getDocumentBusinesses } from "../utils/businesses";
+import { getDocumentBusinesses, headOfficeBusinessFromProfile } from "../utils/businesses";
 
 function StepButton({ number, label, active, done, onClick }) {
   return (
@@ -79,21 +79,7 @@ export default function JobForm({
     businessOptions[0];
 
   const canSelectBusiness = currentRole === "최고관리자";
-  const canAssignWorker = currentRole === "최고관리자";
-  const workerOptions = (allProfiles || [])
-    .filter(
-      (item) =>
-        item?.uid &&
-        item?.approved !== false &&
-        item?.disabled !== true &&
-        (item.role || "기사") === "기사"
-    )
-    .sort((a, b) =>
-      String(a.representativeName || a.email || "").localeCompare(
-        String(b.representativeName || b.email || ""),
-        "ko"
-      )
-    );
+  const headOfficeBusiness = headOfficeBusinessFromProfile(profile);
 
   useEffect(() => {
     localStorage.setItem("gw-one-easy-mode", easyMode ? "on" : "off");
@@ -388,8 +374,28 @@ export default function JobForm({
               </div>
               ) : (
                 <div className="selected-business-card own-business-card">
-                  <div><span>문서 상호</span><strong>{profile.businessName || "내 업체정보 미등록"}</strong></div>
-                  <div><span>사업자등록번호</span><strong>{profile.businessNumber || "미입력"}</strong></div>
+                  <div>
+                    <span>문서 상호</span>
+                    <strong>
+                      {headOfficeBusiness.businessName || "본사 업체정보 미등록"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>사업자등록번호</span>
+                    <strong>
+                      {headOfficeBusiness.businessNumber || "미입력"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>대표자</span>
+                    <strong>
+                      {headOfficeBusiness.representativeName || "미입력"}
+                    </strong>
+                  </div>
+                  <p>
+                    기사·대표 계정의 문서는 본사 업체정보와 본사 직인으로 발행됩니다.
+                    작업자 이름은 현재 로그인한 작업자로 표시됩니다.
+                  </p>
                 </div>
               )}
 
@@ -404,52 +410,14 @@ export default function JobForm({
                   />
                 </Field>
 
-                <Field label="실제 작업자">
-                  {canAssignWorker && !editingJob ? (
-                    <select
-                      value={form.assignedWorkerUid || ""}
-                      onChange={(event) => {
-                        const selected = workerOptions.find(
-                          (item) => item.uid === event.target.value
-                        );
-
-                        setForm({
-                          ...form,
-                          assignedWorkerUid: selected?.uid || "",
-                          assignedWorkerEmail: selected?.email || "",
-                          worker:
-                            selected?.representativeName ||
-                            selected?.businessName ||
-                            selected?.email ||
-                            ""
-                        });
-                      }}
-                    >
-                      <option value="">본인 작업</option>
-                      {workerOptions.map((worker) => (
-                        <option key={worker.uid} value={worker.uid}>
-                          {worker.representativeName ||
-                            worker.businessName ||
-                            worker.email}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      value={form.worker}
-                      readOnly={currentRole !== "최고관리자" || Boolean(editingJob)}
-                      onChange={(event) =>
-                        setForm({ ...form, worker: event.target.value })
-                      }
-                      placeholder="자동 입력"
-                    />
-                  )}
-                  {canAssignWorker && !editingJob && (
-                    <small className="worker-assignment-guide">
-                      기사를 선택하면 최고관리자가 대신 작성해도 해당 기사 작업으로
-                      저장되고 6:4 정산에도 그 기사에게 귀속됩니다.
-                    </small>
-                  )}
+                <Field label="작업자">
+                  <input
+                    value={form.worker}
+                    onChange={(event) =>
+                      setForm({ ...form, worker: event.target.value })
+                    }
+                    placeholder="자동 입력"
+                  />
                 </Field>
               </div>
             </div>
@@ -706,12 +674,6 @@ export default function JobForm({
                 <span>실수령금액</span>
                 <strong>{formatWon(netAmount)}</strong>
               </div>
-              <div>
-                <span>수금상태</span>
-                <strong>
-                  {form.collectionStatus === "uncollected" ? "미수" : "수금완료"}
-                </strong>
-              </div>
             </div>
           </div>
         )}
@@ -838,12 +800,6 @@ export default function JobForm({
                 <div>
                   <span>실수령금액</span>
                   <strong>{formatWon(netAmount)}</strong>
-                </div>
-                <div>
-                  <span>수금상태</span>
-                  <strong>
-                    {form.collectionStatus === "uncollected" ? "미수" : "수금완료"}
-                  </strong>
                 </div>
                 <div>
                   <span>받은 금액</span>

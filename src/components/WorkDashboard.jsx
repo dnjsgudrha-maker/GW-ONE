@@ -38,14 +38,6 @@ export default function WorkDashboard({
       0
     );
 
-    const uncollectedJobs = jobs.filter(
-      (job) => job.collectionStatus === "uncollected"
-    );
-    const uncollectedAmount = uncollectedJobs.reduce(
-      (sum, job) => sum + Number(job.chargeAmount || 0),
-      0
-    );
-
     const workers = new Map();
 
     for (const job of todayJobs) {
@@ -97,8 +89,6 @@ export default function WorkDashboard({
       monthJobs,
       todayAmount,
       monthAmount,
-      uncollectedCount: uncollectedJobs.length,
-      uncollectedAmount,
       workers: [...workers.values()].sort((a, b) => b.count - a.count),
       latest,
       upcomingFollowUps
@@ -150,15 +140,6 @@ export default function WorkDashboard({
           label="이번 달 청구"
           value={formatWon(data.monthAmount)}
         />
-        {currentRole !== "기사" && (
-          <>
-            <StatCard label="미수" value={`${data.uncollectedCount}건`} />
-            <StatCard
-              label="총 미수금"
-              value={formatWon(data.uncollectedAmount)}
-            />
-          </>
-        )}
       </div>
 
       {currentRole !== "기사" && (

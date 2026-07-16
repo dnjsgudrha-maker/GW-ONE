@@ -58,11 +58,9 @@ import CustomerModal from "./components/CustomerModal";
 import LoginScreen from "./components/LoginScreen";
 import TopBar from "./components/TopBar";
 import MonthlySettlement from "./components/MonthlySettlement";
-import WorkerSettlement from "./components/WorkerSettlement";
 import UserManagement from "./components/UserManagement";
 import PendingScreen from "./components/PendingScreen";
 import WorkDashboard from "./components/WorkDashboard";
-import CollectionManagement from "./components/CollectionManagement";
 import MoreMenu from "./components/MoreMenu";
 import ProfilePage from "./components/ProfilePage";
 import NetworkBanner from "./components/NetworkBanner";
@@ -577,6 +575,38 @@ function App() {
         { merge: true }
       );
 
+      // 최고관리자가 본인 업체정보를 저장하면 모든 기사·대표 프로필에
+      // 문서 발행용 본사 업체정보를 함께 저장합니다.
+      if (isAdmin) {
+        const headOfficeBusiness = {
+          id: "head-office",
+          businessName: savedProfile.businessName || "",
+          representativeName: savedProfile.representativeName || "",
+          businessNumber: savedProfile.businessNumber || "",
+          contact: savedProfile.contact || "",
+          businessEmail: savedProfile.businessEmail || "",
+          businessAddress: savedProfile.businessAddress || "",
+          stampDataUrl: savedProfile.stampDataUrl || ""
+        };
+
+        await Promise.all(
+          (allProfiles || [])
+            .filter((item) => item?.uid && item.uid !== user.uid)
+            .map((item) =>
+              updateDoc(doc(db, "profiles", item.uid), {
+                headOfficeBusiness,
+                updatedAt: serverTimestamp()
+              }).catch((error) => {
+                console.warn(
+                  "본사 업체정보 동기화를 건너뜁니다:",
+                  item.uid,
+                  error
+                );
+              })
+            )
+        );
+      }
+
       setProfile(savedProfile);
 
       if (stampFile?.previewUrl) {
@@ -609,9 +639,7 @@ function App() {
         profile.representativeName ||
         user.displayName ||
         current.worker ||
-        "",
-      assignedWorkerUid: "",
-      assignedWorkerEmail: ""
+        ""
     }));
     setLeakData(createInitialLeakData());
     setBeforePhotos([]);
@@ -630,8 +658,6 @@ function App() {
       address: job.address || "",
       jobType: job.jobType || "누수탐지",
       worker: job.worker || "",
-      assignedWorkerUid: job.ownerUid || job.assignedWorkerUid || "",
-      assignedWorkerEmail: job.ownerEmail || job.assignedWorkerEmail || "",
       issuerBusinessId: job.issuerBusinessId || "own",
       issuerBusinessSnapshot: job.issuerBusinessSnapshot || {
         id: job.issuerBusinessId || "saved",
@@ -654,9 +680,6 @@ function App() {
       chargeAmount: String(job.chargeAmount || ""),
       baseChargeAmount: String(job.baseChargeAmount || job.chargeAmount || ""),
       materialCost: String(job.materialCost || ""),
-      collectionStatus: job.collectionStatus || "collected",
-      collectionMemo: job.collectionMemo || "",
-      collectionCompletedAt: job.collectionCompletedAt || "",
       taxAddedPayment: job.taxAddedPayment || "",
       commissionType:
         job.commissionType ||
@@ -700,8 +723,6 @@ function App() {
       address: job.address || "",
       jobType: job.jobType || "누수탐지",
       worker: job.worker || "",
-      assignedWorkerUid: job.ownerUid || job.assignedWorkerUid || "",
-      assignedWorkerEmail: job.ownerEmail || job.assignedWorkerEmail || "",
       issuerBusinessId: job.issuerBusinessId || "own",
       issuerBusinessSnapshot: job.issuerBusinessSnapshot || {
         id: job.issuerBusinessId || "saved",
@@ -724,9 +745,6 @@ function App() {
       chargeAmount: String(job.chargeAmount || ""),
       baseChargeAmount: String(job.baseChargeAmount || job.chargeAmount || ""),
       materialCost: String(job.materialCost || ""),
-      collectionStatus: job.collectionStatus || "collected",
-      collectionMemo: job.collectionMemo || "",
-      collectionCompletedAt: job.collectionCompletedAt || "",
       taxAddedPayment: job.taxAddedPayment || "",
       commissionType:
         job.commissionType ||
@@ -831,30 +849,6 @@ function App() {
       const afterPhotoUrls = photoUrls(afterPhotos);
       const videoUrls = mediaUrls(videos);
 
-      const assignedProfile =
-        isAdmin && form.assignedWorkerUid
-          ? allProfiles.find(
-              (item) => item.uid === form.assignedWorkerUid
-            )
-          : null;
-      const assignedOwnerUid =
-        editingJob?.ownerUid ||
-        assignedProfile?.uid ||
-        user.uid;
-      const assignedOwnerEmail =
-        editingJob?.ownerEmail ||
-        assignedProfile?.email ||
-        user.email ||
-        "";
-      const assignedWorkerName =
-        editingJob?.worker ||
-        assignedProfile?.representativeName ||
-        assignedProfile?.businessName ||
-        form.worker ||
-        profile.representativeName ||
-        user.displayName ||
-        "작업자";
-
       const selectedBusiness = resolveDocumentBusiness(
         profile,
         isAdmin ? form.issuerBusinessId || "own" : "head-office",
@@ -864,10 +858,10 @@ function App() {
       );
 
       const dailySequence = editingJob?.dailySequence || (() => {
-        const sameDayWorkerJobs = (isAdmin ? allJobs : jobs).filter(
+        const sameDayWorkerJobs = jobs.filter(
           (job) =>
             job.workDate === form.workDate &&
-            (job.ownerUid || job.assignedWorkerUid) === assignedOwnerUid
+            String(job.worker || "").trim() === String(form.worker || "").trim()
         );
         const maxSequence = sameDayWorkerJobs.reduce(
           (max, job) => Math.max(max, Number(job.dailySequence || 0)),
@@ -878,9 +872,6 @@ function App() {
 
       const commonData = {
         ...form,
-        worker: assignedWorkerName,
-        assignedWorkerUid: assignedOwnerUid,
-        assignedWorkerEmail: assignedOwnerEmail,
         dailySequence,
         issuerBusinessId: selectedBusiness.id || "own",
         issuerBusinessSnapshot: selectedBusiness,
@@ -893,15 +884,6 @@ function App() {
         commissionBaseAmount,
         commissionAmount,
         netAmount,
-        collectionStatus: form.collectionStatus || "collected",
-        collectionMemo:
-          form.collectionStatus === "uncollected"
-            ? String(form.collectionMemo || "").trim()
-            : "",
-        collectionCompletedAt:
-          form.collectionStatus === "collected"
-            ? editingJob?.collectionCompletedAt || serverTimestamp()
-            : null,
         paymentBreakdown,
         paymentTotal,
         paymentDifference: chargeAmount - paymentTotal,
@@ -922,18 +904,8 @@ function App() {
         leakData: form.jobType === "누수탐지" ? leakData : null,
         leakOpinion:
           form.jobType === "누수탐지" ? leakData.opinionText || "" : "",
-        ownerUid: assignedOwnerUid,
-        ownerEmail: assignedOwnerEmail,
-        createdByUid: editingJob?.createdByUid || user.uid,
-        createdByEmail: editingJob?.createdByEmail || user.email || "",
-        createdByName:
-          editingJob?.createdByName ||
-          profile.representativeName ||
-          user.displayName ||
-          user.email ||
-          "작성자",
-        updatedByUid: user.uid,
-        updatedByEmail: user.email || "",
+        ownerUid: user.uid,
+        ownerEmail: user.email || "",
         updatedAt: serverTimestamp()
       };
 
@@ -962,7 +934,7 @@ function App() {
         );
       } else {
         const createdJobRef = await addDoc(
-          collection(db, "users", assignedOwnerUid, "jobs"),
+          collection(db, "users", user.uid, "jobs"),
           {
             ...commonData,
             beforePhotoUrls,
@@ -983,11 +955,11 @@ function App() {
         try {
           await addDoc(collection(db, "jobNotifications"), {
             jobId: createdJobRef.id,
-            ownerUid: assignedOwnerUid,
+            ownerUid: user.uid,
             actorUid: user.uid,
             actorEmail: user.email || "",
             actorName:
-              assignedWorkerName ||
+              form.worker ||
               profile.representativeName ||
               user.displayName ||
               "작업자",
@@ -1003,17 +975,9 @@ function App() {
 
       setForm((current) => ({
         ...createInitialForm(),
-        worker:
-          profile.representativeName ||
-          user.displayName ||
-          current.worker,
-        assignedWorkerUid: "",
-        assignedWorkerEmail: "",
+        worker: current.worker,
         baseChargeAmount: "",
         materialCost: "",
-        collectionStatus: "collected",
-        collectionMemo: "",
-        collectionCompletedAt: "",
         taxAddedPayment: "",
         commissionType: current.commissionType || "percent",
         commissionRate: current.commissionRate || "30",
@@ -1070,9 +1034,24 @@ function App() {
 
 
   const approveUser = async (uid) => {
+    const headOfficeBusiness = {
+      id: "head-office",
+      businessName: profile.businessName || "",
+      representativeName: profile.representativeName || "",
+      businessNumber: profile.businessNumber || "",
+      contact: profile.contact || "",
+      businessEmail: profile.businessEmail || "",
+      businessAddress: profile.businessAddress || "",
+      stampDataUrl:
+        profile.stampDataUrl ||
+        profile.stampUrl ||
+        DEFAULT_STAMP_DATA_URL
+    };
+
     await updateDoc(doc(db, "profiles", uid), {
       approved: true,
       disabled: false,
+      headOfficeBusiness,
       updatedAt: serverTimestamp()
     });
     setNotice("사용자를 승인했습니다.");
@@ -1210,88 +1189,8 @@ function App() {
     }
   };
 
-
   const currentRole = isAdmin ? "최고관리자" : profile.role || "기사";
-
-
-  const handleMarkCollected = async (job) => {
-    if (!(isAdmin || profile.role === "대표")) {
-      setNotice("수금완료 처리는 최고관리자 또는 대표만 가능합니다.");
-      return;
-    }
-
-    try {
-      const ownerUid = job.ownerUid || user.uid;
-      await updateDoc(doc(db, "users", ownerUid, "jobs", job.id), {
-        collectionStatus: "collected",
-        collectionCompletedAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-
-      setSelectedJob((current) =>
-        current?.id === job.id
-          ? {
-              ...current,
-              collectionStatus: "collected",
-              collectionCompletedAt: new Date().toISOString()
-            }
-          : current
-      );
-      setNotice("수금완료로 처리했습니다.");
-    } catch (error) {
-      setNotice(`수금완료 처리에 실패했습니다: ${error.message}`);
-    }
-  };
-
-  // 최고관리자 업체정보를 기사·대표 프로필에 본사 정보로 동기화합니다.
-  useEffect(() => {
-    if (!isAdmin || !profile.businessName || !allProfiles.length) return;
-
-    const headOfficeBusiness = {
-      id: "head-office",
-      businessName: profile.businessName || "",
-      representativeName: profile.representativeName || "",
-      businessNumber: profile.businessNumber || "",
-      contact: profile.contact || "",
-      businessEmail: profile.businessEmail || "",
-      businessAddress: profile.businessAddress || "",
-      stampDataUrl: profile.stampDataUrl || profile.stampUrl || ""
-    };
-
-    const signature = JSON.stringify(headOfficeBusiness);
-
-    void Promise.all(
-      allProfiles
-        .filter(
-          (item) =>
-            item.uid &&
-            item.uid !== user.uid &&
-            JSON.stringify(item.headOfficeBusiness || {}) !== signature
-        )
-        .map((item) =>
-          updateDoc(doc(db, "profiles", item.uid), {
-            headOfficeBusiness,
-            updatedAt: serverTimestamp()
-          }).catch((error) =>
-            console.warn("본사 업체정보 동기화 실패:", item.uid, error)
-          )
-        )
-    );
-  }, [
-    isAdmin,
-    user?.uid,
-    profile.businessName,
-    profile.representativeName,
-    profile.businessNumber,
-    profile.contact,
-    profile.businessEmail,
-    profile.businessAddress,
-    profile.stampDataUrl,
-    profile.stampUrl,
-    allProfiles
-  ]);
-
-  const canViewSettlement = currentRole !== "기사";
+  const canViewSettlement = true;
   const canManageUsers = currentRole === "최고관리자";
 
   const thisMonth = new Date().toISOString().slice(0, 7);
@@ -1346,8 +1245,7 @@ function App() {
           <WorkDashboard
             jobs={currentRole === "기사" ? jobs : allJobs}
             profiles={allProfiles}
-            currentRole={currentRole}
-            onOpenJob={setSelectedJob}
+              onOpenJob={setSelectedJob}
             onCreateJob={openNewJobForm}
           />
         )}
@@ -1397,11 +1295,7 @@ function App() {
             onNotice={setNotice}
             chargeAmount={chargeAmount}
             materialCost={materialCost}
-            commissionBaseAmount={commissionBaseAmount}
-            commissionAmount={commissionAmount}
-            netAmount={netAmount}
-            currentRole={currentRole}
-            customerHistory={customerHistory}
+              customerHistory={customerHistory}
             leakData={leakData}
             setLeakData={setLeakData}
             editingJob={editingJob}
@@ -1419,9 +1313,9 @@ function App() {
         )}
 
         {view === "settlement" && canViewSettlement && (
-          <WorkerSettlement
-            jobs={allJobs}
-            profiles={allProfiles}
+          <MonthlySettlement
+            jobs={currentRole === "기사" ? jobs : allJobs}
+            role={currentRole}
             onOpenJob={setSelectedJob}
           />
         )}
@@ -1449,7 +1343,6 @@ function App() {
             onOpenCustomers={() => setView("customers")}
             onOpenSettlement={() => setView("settlement")}
             onOpenUsers={() => setView("users")}
-            onOpenCollection={() => setView("collection")}
             onOpenProfile={() => setView("profile")}
             onOpenHelp={() => setView("help")}
             onInstall={installApp}
@@ -1465,14 +1358,6 @@ function App() {
             onEnableNotifications={enableJobNotifications}
             notificationPermission={notificationPermission}
             installAvailable={Boolean(deferredInstallPrompt)}
-          />
-        )}
-
-        {view === "collection" && currentRole !== "기사" && (
-          <CollectionManagement
-            jobs={allJobs}
-            onOpenJob={setSelectedJob}
-            onMarkCollected={handleMarkCollected}
           />
         )}
 
@@ -1538,8 +1423,6 @@ function App() {
             isAdmin || (selectedJob.ownerUid || user.uid) === user.uid
           }
           isSuperAdmin={isAdmin}
-          canManageCollection={isAdmin || profile.role === "대표"}
-          onMarkCollected={handleMarkCollected}
           onNotice={setNotice}
           onOpenDocument={setDocumentType}
           onEdit={() => startEditJob(selectedJob)}

@@ -51,8 +51,6 @@ export const createInitialForm = () => ({
   address: "",
   jobType: "누수탐지",
   worker: "",
-  assignedWorkerUid: "",
-  assignedWorkerEmail: "",
   issuerBusinessId: "own",
   issuerBusinessSnapshot: null,
   workContent: "",
@@ -70,9 +68,6 @@ export const createInitialForm = () => ({
   commissionType: "percent",
   commissionRate: "30",
   commissionFixedAmount: "",
-  collectionStatus: "collected",
-  collectionMemo: "",
-  collectionCompletedAt: "",
   paymentMethod: "계좌입금",
   paymentBreakdown: {
     cash: "",
