@@ -32,10 +32,17 @@ export function headOfficeBusinessFromProfile(profile = {}) {
     };
   }
 
+  // 기사 프로필에 본사 스냅샷이 아직 없더라도 기사 개인 사업자정보나
+  // 기사 직인이 문서에 섞이지 않도록 본사 명칭만 사용합니다.
   return {
-    ...ownBusinessFromProfile(profile),
     id: "head-office",
     businessName: HEAD_OFFICE_BUSINESS_NAME,
+    representativeName: "",
+    businessNumber: "",
+    contact: "",
+    businessEmail: "",
+    businessAddress: "",
+    stampDataUrl: "",
     isHeadOffice: true
   };
 }

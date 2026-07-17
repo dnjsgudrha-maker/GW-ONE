@@ -608,7 +608,7 @@ const restoreDraft = () => {
       if (isAdmin) {
         const headOfficeBusiness = {
           id: "head-office",
-          businessName: savedProfile.businessName || "",
+          businessName: "지더블유솔루션",
           representativeName: savedProfile.representativeName || "",
           businessNumber: savedProfile.businessNumber || "",
           contact: savedProfile.contact || "",
@@ -962,8 +962,6 @@ const restoreDraft = () => {
         businessAddress: selectedBusiness.businessAddress?.trim() || "",
         stampDataUrl:
           selectedBusiness.stampDataUrl ||
-          profile.stampDataUrl ||
-          profile.stampUrl ||
           DEFAULT_STAMP_DATA_URL,
         stampUrl: "",
         leakData: form.jobType === "누수탐지" ? leakData : null,
@@ -991,6 +989,14 @@ const restoreDraft = () => {
           doc(db, "users", editingOwnerUid, "jobs", editingJob.id),
           {
             ...commonData,
+            // v6.0부터 기사·본사 6:4 및 비율 정산 필드는 사용하지 않습니다.
+            workerSettlementRate: deleteField(),
+            officeSettlementRate: deleteField(),
+            workerSettlementAmount: deleteField(),
+            officeSettlementAmount: deleteField(),
+            settlementStatus: deleteField(),
+            settlementCompletedAt: deleteField(),
+            settlementCompletedBy: deleteField(),
             ownerUid: editingOwnerUid,
             ownerEmail: editingJob.ownerEmail || commonData.ownerEmail,
             beforePhotoUrls: beforePhotoUrlsFinal,
@@ -1178,7 +1184,7 @@ const restoreDraft = () => {
   const approveUser = async (uid) => {
     const headOfficeBusiness = {
       id: "head-office",
-      businessName: profile.businessName || "",
+      businessName: "지더블유솔루션",
       representativeName: profile.representativeName || "",
       businessNumber: profile.businessNumber || "",
       contact: profile.contact || "",

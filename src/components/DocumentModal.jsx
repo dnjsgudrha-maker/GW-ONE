@@ -18,7 +18,7 @@ function DocumentHeader({ title, job }) {
     <>
       <div className="doc-title">{title}</div>
       <div className="doc-subtitle">
-        지더블유솔루션 · 등록자 {job.registrantName || job.createdByName || job.worker || "-"}
+        지더블유솔루션 · 담당기사 {job.worker || "-"}
         {job.businessNumber ? ` · ${job.businessNumber}` : ""}
         {job.businessContact ? ` · ${job.businessContact}` : ""}
       </div>
@@ -203,7 +203,7 @@ function DocumentFooter({ job }) {
     <footer className="doc-footer">
       <div>
         <strong>지더블유솔루션</strong>
-        <span>등록자 {job.registrantName || job.createdByName || job.worker || "-"}</span>
+        <span>담당기사 {job.worker || "-"}</span>
         {job.businessNumber && (
           <span>사업자등록번호 {job.businessNumber}</span>
         )}
