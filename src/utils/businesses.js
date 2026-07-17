@@ -13,13 +13,15 @@ export function ownBusinessFromProfile(profile = {}) {
 }
 
 
+export const HEAD_OFFICE_BUSINESS_NAME = "지더블유솔루션";
+
 export function headOfficeBusinessFromProfile(profile = {}) {
   const saved = profile.headOfficeBusiness;
 
   if (saved?.businessName) {
     return {
       id: saved.id || "head-office",
-      businessName: saved.businessName || "",
+      businessName: HEAD_OFFICE_BUSINESS_NAME,
       representativeName: saved.representativeName || "",
       businessNumber: saved.businessNumber || "",
       contact: saved.contact || "",
@@ -30,7 +32,12 @@ export function headOfficeBusinessFromProfile(profile = {}) {
     };
   }
 
-  return ownBusinessFromProfile(profile);
+  return {
+    ...ownBusinessFromProfile(profile),
+    id: "head-office",
+    businessName: HEAD_OFFICE_BUSINESS_NAME,
+    isHeadOffice: true
+  };
 }
 
 function workerBusinessFromProfile(worker = {}) {

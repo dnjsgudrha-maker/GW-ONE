@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
 import { formatWon } from "../utils/formatters";
-import { calculateJobSettlement, getPaymentBreakdown, resolveSettlement } from "../utils/settlement";
+import { getPaymentBreakdown } from "../utils/settlement";
 import { shareJob } from "../utils/share";
 
 function Detail({ label, value }) {
@@ -51,18 +50,11 @@ export default function JobModal({
   isSuperAdmin = false,
   canManageCollection = false,
   onMarkCollected,
-  canManageSettlement = false,
-  onSaveSettlement,
   onRequestReview,
   onMarkReviewGiftSent,
   reviewCompleted = false
 }) {
   const paymentBreakdown = getPaymentBreakdown(job);
-  const [workerRate, setWorkerRate] = useState(String(job.workerSettlementRate ?? 60));
-  const [settlementSaving, setSettlementSaving] = useState(false);
-  useEffect(() => setWorkerRate(String(job.workerSettlementRate ?? 60)), [job.id, job.workerSettlementRate]);
-  const settlementPreview = useMemo(() => calculateJobSettlement(job, workerRate), [job, workerRate]);
-  const savedSettlement = resolveSettlement(job);
   const reviewStatus = reviewCompleted
     ? (job.reviewGiftSentAt ? "gift-sent" : "completed")
     : (job.reviewRequestedAt ? "requested" : "none");
@@ -85,7 +77,7 @@ export default function JobModal({
           <Detail label="작업일" value={job.workDate} />
           <Detail label="방문시간" value={job.visitTime || "-"} />
           <Detail label="업체명" value={job.businessName || "-"} />
-          <Detail label="대표자" value={job.representativeName || "-"} />
+          <Detail label="등록자" value={job.registrantName || job.createdByName || job.worker || "-"} />
           <Detail label="연락처" value={job.phone || "-"} />
           <Detail label="담당기사" value={job.worker || "-"} />
           <Detail
@@ -128,42 +120,7 @@ export default function JobModal({
         </div>
 
 
-        {(canManageSettlement || job.settlementStatus === "completed") && (
-          <div className="job-settlement-manager">
-            <div className="job-settlement-title">
-              <div><strong>건별 기사·본사 정산</strong><span>{job.settlementStatus === "completed" ? "정산완료" : "정산대기"}</span></div>
-              <span className={job.settlementStatus === "completed" ? "settlement-complete-chip" : "settlement-pending-chip"}>{job.settlementStatus === "completed" ? "완료" : "대기"}</span>
-            </div>
-            {canManageSettlement ? (
-              <>
-                <div className="settlement-rate-buttons">{[50,55,60,65,70,75,80].map((rate) => <button type="button" key={rate} className={Number(workerRate) === rate ? "active" : ""} onClick={() => setWorkerRate(String(rate))}>{rate}%</button>)}</div>
-                <label className="settlement-rate-input"><span>기사 비율</span><div><input type="number" min="0" max="100" value={workerRate} onChange={(event) => setWorkerRate(event.target.value)} /><b>%</b></div></label>
-                <div className="settlement-calculation-grid">
-                  <Detail label="정산기준" value={formatWon(settlementPreview.settlementBaseAmount)} />
-                  <Detail label="기사 비율" value={`${settlementPreview.workerSettlementRate}%`} />
-                  <Detail label="본사 비율" value={`${settlementPreview.officeSettlementRate}%`} />
-                  <Detail label="기사 정산금" value={formatWon(settlementPreview.workerSettlementAmount)} />
-                  <Detail label="본사 정산금" value={formatWon(settlementPreview.officeSettlementAmount)} />
-                </div>
-                <small className="settlement-formula-note">정산기준 = 부가세 제외 원금 - 자재비 - 수수료</small>
-                <button type="button" className="save-settlement-button" disabled={settlementSaving || workerRate === ""} onClick={async () => {
-                  try {
-                    setSettlementSaving(true);
-                    await onSaveSettlement?.(job, settlementPreview);
-                  } finally { setSettlementSaving(false); }
-                }}>{settlementSaving ? "저장 중..." : "건별 정산 저장"}</button>
-              </>
-            ) : (
-              <div className="settlement-calculation-grid">
-                <Detail label="정산기준" value={formatWon(savedSettlement.settlementBaseAmount)} />
-                <Detail label="기사 비율" value={`${savedSettlement.workerRate}%`} />
-                <Detail label="본사 비율" value={`${savedSettlement.officeRate}%`} />
-                <Detail label="기사 정산금" value={formatWon(savedSettlement.workerAmount)} />
-                <Detail label="본사 정산금" value={formatWon(savedSettlement.officeAmount)} />
-              </div>
-            )}
-          </div>
-        )}
+
 
         <DetailBlock label="작업내용" value={job.workContent || "-"} />
         <DetailBlock label="작업결과" value={job.result || "-"} />

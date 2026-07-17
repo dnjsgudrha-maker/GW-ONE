@@ -1,7 +1,6 @@
 export default function MoreMenu({
   role,
   onOpenCustomers,
-  onOpenSettlement,
   onOpenUsers,
   onOpenCollection,
   onOpenProfile,
@@ -15,7 +14,7 @@ export default function MoreMenu({
   installAvailable,
   homepageUrl
 }) {
-  const canViewSettlement = role !== "기사";
+  const canReceiveNotifications = role !== "기사";
   const canManageUsers = role === "최고관리자";
 
   return (
@@ -34,18 +33,6 @@ export default function MoreMenu({
           <strong>고객관리</strong>
           <small>이전 방문 찾기</small>
         </button>
-
-        {canViewSettlement && (
-          <button onClick={onOpenSettlement}>
-            <span>₩</span>
-            <strong>{role === "기사" ? "내 작업 합계" : "월별정산"}</strong>
-            <small>
-              {role === "기사"
-                ? "내 작업금액·자재비"
-                : "전체 작업금액·자재비"}
-            </small>
-          </button>
-        )}
 
         {role !== "기사" && (
           <button onClick={onOpenCollection}>
@@ -95,7 +82,7 @@ export default function MoreMenu({
           <small>작업내역 파일로 저장</small>
         </button>
 
-        {canViewSettlement && (
+        {canReceiveNotifications && (
           <button onClick={onEnableNotifications}>
             <span>🔔</span>
             <strong>
@@ -121,8 +108,8 @@ export default function MoreMenu({
       </div>
 
       <div className="version-box">
-        <strong>GW ONE v5.1</strong>
-        <span>건별 정산·홈페이지 연동 버전</span>
+        <strong>GW ONE v5.5</strong>
+        <span>본사 사업자·직인 통합 버전</span>
       </div>
     </section>
   );

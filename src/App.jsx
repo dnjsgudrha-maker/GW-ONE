@@ -57,7 +57,6 @@ import CustomerList from "./components/CustomerList";
 import CustomerModal from "./components/CustomerModal";
 import LoginScreen from "./components/LoginScreen";
 import TopBar from "./components/TopBar";
-import MonthlySettlement from "./components/MonthlySettlement";
 import UserManagement from "./components/UserManagement";
 import PendingScreen from "./components/PendingScreen";
 import WorkDashboard from "./components/WorkDashboard";
@@ -896,6 +895,12 @@ const restoreDraft = () => {
         user.displayName ||
         "작업자";
 
+      const registrantName =
+        profile.representativeName ||
+        user.displayName ||
+        user.email ||
+        "작성자";
+
       const selectedBusiness = resolveDocumentBusiness(
         profile,
         "head-office",
@@ -947,9 +952,10 @@ const restoreDraft = () => {
         paymentTotal,
         paymentDifference: chargeAmount - paymentTotal,
         businessName:
-          selectedBusiness.businessName?.trim() || "GW배관솔루션",
+          "지더블유솔루션",
         representativeName:
           selectedBusiness.representativeName?.trim() || "",
+        registrantName,
         businessNumber: selectedBusiness.businessNumber?.trim() || "",
         businessContact: selectedBusiness.contact?.trim() || "",
         businessEmail: selectedBusiness.businessEmail?.trim() || "",
@@ -968,11 +974,7 @@ const restoreDraft = () => {
         createdByUid: editingJob?.createdByUid || user.uid,
         createdByEmail: editingJob?.createdByEmail || user.email || "",
         createdByName:
-          editingJob?.createdByName ||
-          profile.representativeName ||
-          user.displayName ||
-          user.email ||
-          "작성자",
+          editingJob?.createdByName || registrantName,
         updatedByUid: user.uid,
         updatedByEmail: user.email || "",
         updatedAt: serverTimestamp()
@@ -1171,28 +1173,6 @@ const restoreDraft = () => {
     }
   };
 
-  const handleSaveSettlement = async (job, settlement) => {
-    if (!isAdmin) {
-      setNotice("건별 정산 비율은 최고관리자만 저장할 수 있습니다.");
-      return;
-    }
-    if (!job?.id) return;
-    const ownerUid = job.ownerUid || user.uid;
-    try {
-      const payload = {
-        ...settlement,
-        settlementUpdatedAt: new Date().toISOString(),
-        settlementUpdatedBy: user.uid
-      };
-      await updateDoc(doc(db, "users", ownerUid, "jobs", job.id), payload);
-      const updatedJob = { ...job, ...payload };
-      setSelectedJob(updatedJob);
-      setNotice(`기사 ${payload.workerSettlementRate}% · 본사 ${payload.officeSettlementRate}%로 정산을 저장했습니다.`);
-    } catch (error) {
-      setNotice(`정산을 저장하지 못했습니다: ${error.message}`);
-      throw error;
-    }
-  };
 
 
   const approveUser = async (uid) => {
@@ -1387,7 +1367,6 @@ const restoreDraft = () => {
   };
 
   const currentRole = isAdmin ? "최고관리자" : profile.role || "기사";
-  const canViewSettlement = currentRole !== "기사";
   const canManageUsers = currentRole === "최고관리자";
 
   const thisMonth = new Date().toISOString().slice(0, 7);
@@ -1509,12 +1488,7 @@ const restoreDraft = () => {
           />
         )}
 
-        {view === "settlement" && canViewSettlement && (
-          <MonthlySettlement
-            jobs={allJobs}
-            onOpenJob={setSelectedJob}
-          />
-        )}
+
 
         {view === "users" && canManageUsers && (
           <UserManagement
@@ -1537,7 +1511,6 @@ const restoreDraft = () => {
           <MoreMenu
             role={currentRole}
             onOpenCustomers={() => setView("customers")}
-            onOpenSettlement={() => setView("settlement")}
             onOpenUsers={() => setView("users")}
             onOpenCollection={() => setView("collection")}
             onOpenProfile={() => setView("profile")}
@@ -1609,7 +1582,7 @@ const restoreDraft = () => {
           작업입력
         </button>
         <button
-          className={view === "more" || ["customers", "settlement", "users", "profile", "help"].includes(view) ? "active" : ""}
+          className={view === "more" || ["customers", "users", "profile", "help"].includes(view) ? "active" : ""}
           onClick={() => setView("more")}
         >
           <span>•••</span>
@@ -1631,8 +1604,6 @@ const restoreDraft = () => {
           isSuperAdmin={isAdmin}
           canManageCollection={isAdmin || profile.role === "대표"}
           onMarkCollected={handleMarkCollected}
-          canManageSettlement={isAdmin}
-          onSaveSettlement={handleSaveSettlement}
           onRequestReview={handleRequestReview}
           onMarkReviewGiftSent={handleMarkReviewGiftSent}
           reviewCompleted={homepageReviews.some((review) =>
