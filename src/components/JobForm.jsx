@@ -107,12 +107,12 @@ export default function JobForm({
   };
 
   const goNext = () => {
-    if (step === 1 && !form.address.trim()) {
+    if (step === 1 && !String(form.address || "").trim()) {
       onNotice("현장 주소를 입력해 주세요.");
       return;
     }
 
-    if (step === 2 && !form.workContent.trim()) {
+    if (step === 2 && !String(form.workContent || "").trim()) {
       onNotice("작업내용을 입력하거나 작업 템플릿을 선택해 주세요.");
       return;
     }
@@ -141,13 +141,13 @@ export default function JobForm({
   );
 
   const requestSave = () => {
-    if (!form.address.trim()) {
+    if (!String(form.address || "").trim()) {
       onNotice("현장 주소를 입력해 주세요.");
       setStep(1);
       return;
     }
 
-    if (!form.workContent.trim()) {
+    if (!String(form.workContent || "").trim()) {
       onNotice("작업내용을 입력해 주세요.");
       setStep(2);
       return;
@@ -655,12 +655,12 @@ export default function JobForm({
               <div>
                 <span>문서 상호</span>
                 <strong>
-                  {selectedBusiness?.businessName || "업체정보 미등록"}
+                  {headOfficeBusiness?.businessName || "업체정보 미등록"}
                 </strong>
               </div>
               <div>
                 <span>사업자번호</span>
-                <strong>{selectedBusiness?.businessNumber || "미입력"}</strong>
+                <strong>{headOfficeBusiness?.businessNumber || "미입력"}</strong>
               </div>
               <div>
                 <span>작업금액</span>
@@ -782,12 +782,12 @@ export default function JobForm({
                 <div>
                   <span>문서 상호</span>
                   <strong>
-                    {selectedBusiness?.businessName || "업체정보 미등록"}
+                    {headOfficeBusiness?.businessName || "업체정보 미등록"}
                   </strong>
                 </div>
                 <div>
                   <span>사업자번호</span>
-                  <strong>{selectedBusiness?.businessNumber || "미입력"}</strong>
+                  <strong>{headOfficeBusiness?.businessNumber || "미입력"}</strong>
                 </div>
                 <div>
                   <span>청구금액</span>
