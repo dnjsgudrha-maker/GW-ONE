@@ -2,81 +2,171 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function signedIn() {
       return request.auth != null;
     }
 
+    function primaryAdmin() {
+      return signedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == 'dnjsgudrha@hanmail.net';
+    }
+
+    function adminDocExists() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
     function isAdmin() {
-      return signedIn() &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      return primaryAdmin() || adminDocExists();
+    }
+
+    function hasProfile() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/profiles/$(request.auth.uid));
+    }
+
+    function myProfile() {
+      return get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
     }
 
     function isApprovedUser() {
-      return signedIn() &&
-        exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.approved != false &&
-        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.disabled != true;
+      return hasProfile()
+        && myProfile().approved != false
+        && myProfile().disabled != true;
     }
 
     function isRepresentative() {
-      return isApprovedUser() &&
-        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == "대표";
+      return isApprovedUser() && myProfile().role == '대표';
     }
 
+    function isManagement() {
+      return isAdmin() || isRepresentative();
+    }
+
+    // ─────────────────────────────────────────────
+    // 홈페이지
+    // ─────────────────────────────────────────────
+    match /homepageSettings/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /homepageReviews/{reviewId} {
+      // 공개 화면에서는 status == visible 조건으로 조회해야 합니다.
+      allow get, list: if resource.data.status == 'visible' || isAdmin();
+
+      allow create: if
+        request.resource.data.status == 'visible' &&
+        request.resource.data.area is string &&
+        request.resource.data.customerId is string &&
+        request.resource.data.content is string &&
+        request.resource.data.rating is int &&
+        request.resource.data.rating >= 1 &&
+        request.resource.data.rating <= 5;
+
+      allow update, delete: if isAdmin();
+
+      match /comments/{commentId} {
+        allow get, list: if resource.data.status == 'visible' || isAdmin();
+
+        allow create: if
+          request.resource.data.status == 'visible' &&
+          request.resource.data.isOfficial == false &&
+          request.resource.data.area is string &&
+          request.resource.data.customerId is string &&
+          request.resource.data.content is string;
+
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    // GW ONE 사용자 및 권한
+    // ─────────────────────────────────────────────
     match /admins/{userId} {
-      allow read: if isAdmin() || (signedIn() && request.auth.uid == userId);
+      // 대표 화면에서도 관리자 여부 목록을 읽습니다.
+      allow read: if isManagement() || (signedIn() && request.auth.uid == userId);
       allow create, update, delete: if isAdmin();
     }
 
     match /profiles/{userId} {
-      allow create: if signedIn() && request.auth.uid == userId;
-      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      // 최초 로그인 시 본인 프로필 생성.
+      // 관리 권한은 admins 컬렉션 또는 고정 최고관리자 이메일로만 판정합니다.
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role == '기사'
+        && request.resource.data.disabled == false;
+
+      allow read: if signedIn()
+        && (request.auth.uid == userId || isManagement());
+
+      // 본인은 승인/중지/역할 필드를 바꿀 수 없습니다.
       allow update: if signedIn() && (
         isAdmin() ||
         (
           request.auth.uid == userId &&
+          request.resource.data.uid == resource.data.uid &&
+          request.resource.data.email == resource.data.email &&
           request.resource.data.approved == resource.data.approved &&
           request.resource.data.disabled == resource.data.disabled &&
           request.resource.data.role == resource.data.role
         )
       );
+
+      allow delete: if isAdmin();
     }
-
-    match /users/{userId}/jobs/{jobId} {
-      allow read:
-        if signedIn() &&
-        (
-          (request.auth.uid == userId && isApprovedUser()) ||
-          isRepresentative() ||
-          isAdmin()
-        );
-
-      allow create, update, delete:
-        if signedIn() &&
-        (
-          (request.auth.uid == userId && isApprovedUser()) ||
-          isAdmin()
-        );
-    }
-
 
     match /pendingWorkers/{workerId} {
-      allow create, update, delete:
-        if isRepresentative() || isAdmin();
+      allow create, update, delete: if isManagement();
 
-      allow read:
-        if isRepresentative() ||
-           isAdmin() ||
-           (
-             signedIn() &&
-             resource.data.email == request.auth.token.email
-           );
+      // 대표/최고관리자는 전체 조회 가능.
+      // 최초 로그인 사용자는 자기 이메일로 where 조회할 때만 허용됩니다.
+      allow read: if isManagement() || (
+        signedIn() &&
+        request.auth.token.email != null &&
+        resource.data.email == request.auth.token.email.lower()
+      );
     }
 
-    // 대표 및 관리자의 전체 작업현황(collectionGroup("jobs")) 조회 허용
+    // ─────────────────────────────────────────────
+    // GW ONE 작업일지
+    // ─────────────────────────────────────────────
+    match /users/{ownerUid}/jobs/{jobId} {
+      allow read: if signedIn() && (
+        (request.auth.uid == ownerUid && isApprovedUser()) ||
+        isManagement()
+      );
+
+      // 기사는 본인 작업만, 최고관리자는 기사 대신 등록 가능.
+      allow create: if signedIn() && (
+        (request.auth.uid == ownerUid && isApprovedUser()) ||
+        isAdmin()
+      );
+
+      // 대표는 수금처리, 최고관리자는 건별 정산/전체 수정 가능.
+      allow update: if signedIn() && (
+        (request.auth.uid == ownerUid && isApprovedUser()) ||
+        isManagement()
+      );
+
+      allow delete: if signedIn() && (
+        (request.auth.uid == ownerUid && isApprovedUser()) ||
+        isAdmin()
+      );
+    }
+
+    // collectionGroup(db, 'jobs') 전체 작업현황 조회용.
     match /{documentPath=**}/jobs/{jobId} {
-      allow read: if isRepresentative() || isAdmin();
+      allow read: if isManagement();
     }
 
+    match /jobNotifications/{notificationId} {
+      allow create: if isApprovedUser() || isAdmin();
+      allow read: if isManagement();
+      allow update, delete: if isAdmin();
+    }
   }
 }
