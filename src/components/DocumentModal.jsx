@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { formatWon } from "../utils/formatters";
+import { resolveFinancials } from "../utils/settlement";
 
 function InfoRow({ label, value }) {
   return (
@@ -68,6 +69,14 @@ function DocumentPhotos({ job }) {
 }
 
 function WorkReport({ job }) {
+  const financials = resolveFinancials(job);
+  const commissionLabel =
+    financials.commissionType === "none"
+      ? "없음"
+      : financials.commissionType === "fixed"
+        ? `${formatWon(financials.commissionAmount)} (금액입력)`
+        : `${financials.commissionRate || 0}% · ${formatWon(financials.commissionAmount)}`;
+
   return (
     <article className="print-document" data-document-title="작업보고서">
       <DocumentHeader title="작 업 보 고 서" job={job} />
@@ -84,6 +93,23 @@ function WorkReport({ job }) {
           label="사용장비"
           value={job.equipment?.length ? job.equipment.join(", ") : "-"}
         />
+      </section>
+
+      <section className="doc-section">
+        <h3>금액 내역</h3>
+        <InfoRow
+          label="총 작업금액 (부가세 미포함)"
+          value={formatWon(financials.baseChargeAmount)}
+        />
+        <InfoRow label="자재비" value={formatWon(financials.materialCost)} />
+        <InfoRow label="수수료" value={commissionLabel} />
+        <InfoRow
+          label="정산 대상금액"
+          value={formatWon(financials.netAmount)}
+        />
+        <p className="doc-finance-note">
+          정산 대상금액 = 부가세 미포함 작업금액 - 자재비 - 수수료
+        </p>
       </section>
 
       <section className="doc-section">

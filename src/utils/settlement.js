@@ -22,29 +22,53 @@ export function getPaymentBreakdown(job) {
   };
 }
 
-export function resolveSettlement(job) {
+export function resolveFinancials(job) {
   const chargeAmount = numberValue(job?.chargeAmount);
+  // baseChargeAmount는 카드·세금계산서의 부가세 10%를 제외한 원금입니다.
   const baseChargeAmount = numberValue(job?.baseChargeAmount) || chargeAmount;
   const materialCost = numberValue(job?.materialCost);
-  const settlementBaseAmount = Math.max(
-    0,
-    numberValue(job?.settlementBaseAmount) || baseChargeAmount - materialCost
-  );
-  const workerRate = Math.min(100, Math.max(0, numberValue(job?.workerSettlementRate)));
-  const officeRate = 100 - workerRate;
-  const workerAmount =
-    job?.settlementStatus === "completed"
-      ? numberValue(job?.workerSettlementAmount)
-      : 0;
-  const officeAmount =
-    job?.settlementStatus === "completed"
-      ? numberValue(job?.officeSettlementAmount)
-      : 0;
+  const commissionBaseAmount = Math.max(baseChargeAmount - materialCost, 0);
+  const commissionType = job?.commissionType || "percent";
+  const commissionRate = numberValue(job?.commissionRate);
+  const commissionFixedAmount = numberValue(job?.commissionFixedAmount);
+  const savedCommissionAmount = numberValue(job?.commissionAmount);
+  const commissionAmount =
+    commissionType === "none"
+      ? 0
+      : savedCommissionAmount > 0
+        ? savedCommissionAmount
+        : commissionType === "fixed"
+          ? commissionFixedAmount
+          : Math.round((commissionBaseAmount * commissionRate) / 100);
+  // 기사·본사 비율은 반드시 원금 - 자재비 - 수수료 이후 금액에서 나눕니다.
+  const netAmount = Math.max(baseChargeAmount - materialCost - commissionAmount, 0);
 
   return {
     chargeAmount,
     baseChargeAmount,
     materialCost,
+    commissionBaseAmount,
+    commissionType,
+    commissionRate,
+    commissionAmount,
+    netAmount
+  };
+}
+
+export function resolveSettlement(job) {
+  const financials = resolveFinancials(job);
+  const settlementBaseAmount = financials.netAmount;
+  const workerRate = Math.min(100, Math.max(0, numberValue(job?.workerSettlementRate)));
+  const officeRate = 100 - workerRate;
+  const isCompleted = job?.settlementStatus === "completed";
+  // 기존에 잘못 저장된 정산금이 있더라도 최신 공식으로 즉시 다시 계산합니다.
+  const workerAmount = isCompleted
+    ? Math.round((settlementBaseAmount * workerRate) / 100)
+    : 0;
+  const officeAmount = isCompleted ? settlementBaseAmount - workerAmount : 0;
+
+  return {
+    ...financials,
     settlementBaseAmount,
     workerRate,
     officeRate,
@@ -83,7 +107,9 @@ export function summarizeMonth(jobs, month) {
         summary.totalCharge += settlement.chargeAmount;
         summary.totalBaseCharge += settlement.baseChargeAmount;
         summary.totalMaterialCost += settlement.materialCost;
+        summary.totalCommission += settlement.commissionAmount;
         summary.totalSettlementBase += settlement.settlementBaseAmount;
+        summary.totalNetAmount += settlement.netAmount;
         summary.totalWorkerAmount += settlement.workerAmount;
         summary.totalOfficeAmount += settlement.officeAmount;
         if (settlement.settlementStatus === "completed") summary.completedCount += 1;

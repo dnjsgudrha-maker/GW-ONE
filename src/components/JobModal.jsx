@@ -138,7 +138,7 @@ export default function JobModal({
                   <Detail label="기사 정산금" value={formatWon(settlementPreview.workerSettlementAmount)} />
                   <Detail label="본사 정산금" value={formatWon(settlementPreview.officeSettlementAmount)} />
                 </div>
-                <small className="settlement-formula-note">정산기준 = 원금 기준 작업금액 - 자재비</small>
+                <small className="settlement-formula-note">정산기준 = 부가세 제외 원금 - 자재비 - 수수료</small>
                 <button type="button" className="save-settlement-button" disabled={settlementSaving || workerRate === ""} onClick={async () => {
                   try {
                     setSettlementSaving(true);
