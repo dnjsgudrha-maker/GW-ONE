@@ -93,6 +93,7 @@ function App() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [allProfiles, setAllProfiles] = useState([]);
   const [allJobs, setAllJobs] = useState([]);
+  const [homepageReviews, setHomepageReviews] = useState([]);
   const [adminUids, setAdminUids] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
@@ -108,6 +109,17 @@ function App() {
   const jobAlertTimer = useRef(null);
 
 
+
+  useEffect(() => {
+    if (!db) return;
+    return onSnapshot(
+      query(collection(db, "homepageReviews"), where("status", "==", "visible")),
+      (snapshot) => {
+        setHomepageReviews(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })));
+      },
+      (error) => console.warn("홈페이지 후기 연동을 건너뜁니다:", error)
+    );
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("gw-one-large-text", largeText ? "on" : "off");
@@ -1098,6 +1110,67 @@ const restoreDraft = () => {
   };
 
 
+  const handleRequestReview = async (job) => {
+    if (!job?.id || !job.phone) {
+      setNotice("고객 연락처를 확인해 주세요.");
+      return;
+    }
+
+    const ownerUid = job.ownerUid || user.uid;
+    const homepageBase = String(import.meta.env.VITE_HOMEPAGE_URL || "").replace(/\/$/, "");
+    if (!homepageBase) {
+      setNotice(".env의 VITE_HOMEPAGE_URL에 홈페이지 주소를 먼저 입력해 주세요.");
+      return;
+    }
+
+    const reviewUrl = `${homepageBase}/?review=1&jobId=${encodeURIComponent(job.id)}&ownerUid=${encodeURIComponent(ownerUid)}`;
+    const message = [
+      "안녕하세요. GW배관솔루션입니다.",
+      "",
+      "오늘 서비스를 이용해 주셔서 진심으로 감사합니다.",
+      "서비스가 만족스러우셨다면 아래 링크를 통해 소중한 후기를 남겨주세요.",
+      "",
+      reviewUrl,
+      "",
+      "후기 작성 후 담당 기사에게 ‘후기 작성 완료’라고 문자 보내주시면,",
+      "커피쿠폰 또는 소정의 사은품을 보내드립니다.",
+      "",
+      "감사합니다.",
+      "GW배관솔루션",
+      "1670-1404"
+    ].join("\n");
+
+    try {
+      const payload = {
+        reviewRequestedAt: new Date().toISOString(),
+        reviewRequestUrl: reviewUrl,
+        reviewRequestPhone: job.phone
+      };
+      await updateDoc(doc(db, "users", ownerUid, "jobs", job.id), payload);
+      const updatedJob = { ...job, ...payload };
+      setSelectedJob(updatedJob);
+
+      const digits = String(job.phone).replace(/[^0-9+]/g, "");
+      window.location.href = `sms:${digits}?body=${encodeURIComponent(message)}`;
+      setNotice("문자 앱을 열었습니다. 내용을 확인한 뒤 전송해 주세요.");
+    } catch (error) {
+      setNotice(`후기 요청 상태를 저장하지 못했습니다: ${error.message}`);
+    }
+  };
+
+  const handleMarkReviewGiftSent = async (job) => {
+    if (!job?.id) return;
+    const ownerUid = job.ownerUid || user.uid;
+    try {
+      const payload = { reviewGiftSentAt: new Date().toISOString() };
+      await updateDoc(doc(db, "users", ownerUid, "jobs", job.id), payload);
+      setSelectedJob({ ...job, ...payload });
+      setNotice("사은품 전달완료로 처리했습니다.");
+    } catch (error) {
+      setNotice(`사은품 상태를 저장하지 못했습니다: ${error.message}`);
+    }
+  };
+
   const handleSaveSettlement = async (job, settlement) => {
     if (!isAdmin) {
       setNotice("건별 정산 비율은 최고관리자만 저장할 수 있습니다.");
@@ -1560,6 +1633,12 @@ const restoreDraft = () => {
           onMarkCollected={handleMarkCollected}
           canManageSettlement={isAdmin}
           onSaveSettlement={handleSaveSettlement}
+          onRequestReview={handleRequestReview}
+          onMarkReviewGiftSent={handleMarkReviewGiftSent}
+          reviewCompleted={homepageReviews.some((review) =>
+            String(review.jobId || "") === String(selectedJob.id || "") &&
+            (!review.ownerUid || String(review.ownerUid) === String(selectedJob.ownerUid || user.uid))
+          )}
           onNotice={setNotice}
           onOpenDocument={setDocumentType}
           onEdit={() => startEditJob(selectedJob)}

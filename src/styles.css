@@ -4218,3 +4218,5 @@ button { cursor: pointer; }
   font-size: 12px;
   line-height: 1.45;
 }
+
+.review-request-panel{margin:16px 0;padding:16px;border:1px solid #dbe5ee;border-radius:14px;background:#f8fbfd}.review-request-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.review-status-chip{font-size:12px;font-weight:800;padding:6px 9px;border-radius:999px;background:#eef2f5}.review-status-chip.requested{background:#fff3cd}.review-status-chip.completed{background:#d9f7e5}.review-status-chip.gift-sent{background:#e7e0ff}.review-request-button,.review-gift-button{width:100%;margin-top:10px;padding:12px 14px;border:0;border-radius:10px;font-weight:800;cursor:pointer}.review-request-button{background:#1f6feb;color:white}.review-gift-button{background:#6f42c1;color:white}

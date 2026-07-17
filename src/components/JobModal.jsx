@@ -52,7 +52,10 @@ export default function JobModal({
   canManageCollection = false,
   onMarkCollected,
   canManageSettlement = false,
-  onSaveSettlement
+  onSaveSettlement,
+  onRequestReview,
+  onMarkReviewGiftSent,
+  reviewCompleted = false
 }) {
   const paymentBreakdown = getPaymentBreakdown(job);
   const [workerRate, setWorkerRate] = useState(String(job.workerSettlementRate ?? 60));
@@ -60,6 +63,10 @@ export default function JobModal({
   useEffect(() => setWorkerRate(String(job.workerSettlementRate ?? 60)), [job.id, job.workerSettlementRate]);
   const settlementPreview = useMemo(() => calculateJobSettlement(job, workerRate), [job, workerRate]);
   const savedSettlement = resolveSettlement(job);
+  const reviewStatus = reviewCompleted
+    ? (job.reviewGiftSentAt ? "gift-sent" : "completed")
+    : (job.reviewRequestedAt ? "requested" : "none");
+
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -192,6 +199,40 @@ export default function JobModal({
         <PhotoSection title="작업 전" urls={job.beforePhotoUrls || []} />
         <PhotoSection title="작업 중" urls={job.duringPhotoUrls || []} />
         <PhotoSection title="작업 후" urls={job.afterPhotoUrls || []} />
+
+        <div className="review-request-panel">
+          <div className="review-request-head">
+            <strong>고객 후기 관리</strong>
+            <span className={`review-status-chip ${reviewStatus}`}>
+              {reviewStatus === "gift-sent"
+                ? "🎁 사은품 전달완료"
+                : reviewStatus === "completed"
+                  ? "🟢 후기작성완료"
+                  : reviewStatus === "requested"
+                    ? "🟡 후기 요청완료"
+                    : "⚪ 후기 미요청"}
+            </span>
+          </div>
+          {job.reviewRequestedAt && (
+            <small>요청일: {String(job.reviewRequestedAt).slice(0, 10)}</small>
+          )}
+          {reviewCompleted && !job.reviewGiftSentAt && (
+            <button type="button" className="review-gift-button" onClick={() => onMarkReviewGiftSent?.(job)}>
+              🎁 사은품 전달완료 처리
+            </button>
+          )}
+          {!reviewCompleted && (
+            <button
+              type="button"
+              className="review-request-button"
+              disabled={!job.phone}
+              onClick={() => onRequestReview?.(job)}
+            >
+              {job.reviewRequestedAt ? "📨 후기 재요청" : "📨 후기 요청 보내기"}
+            </button>
+          )}
+          {!job.phone && <small>고객 연락처가 없어 후기 요청을 보낼 수 없습니다.</small>}
+        </div>
 
         <div className="quick-action-buttons">
           <button
