@@ -1098,6 +1098,30 @@ const restoreDraft = () => {
   };
 
 
+  const handleSaveSettlement = async (job, settlement) => {
+    if (!isAdmin) {
+      setNotice("건별 정산 비율은 최고관리자만 저장할 수 있습니다.");
+      return;
+    }
+    if (!job?.id) return;
+    const ownerUid = job.ownerUid || user.uid;
+    try {
+      const payload = {
+        ...settlement,
+        settlementUpdatedAt: new Date().toISOString(),
+        settlementUpdatedBy: user.uid
+      };
+      await updateDoc(doc(db, "users", ownerUid, "jobs", job.id), payload);
+      const updatedJob = { ...job, ...payload };
+      setSelectedJob(updatedJob);
+      setNotice(`기사 ${payload.workerSettlementRate}% · 본사 ${payload.officeSettlementRate}%로 정산을 저장했습니다.`);
+    } catch (error) {
+      setNotice(`정산을 저장하지 못했습니다: ${error.message}`);
+      throw error;
+    }
+  };
+
+
   const approveUser = async (uid) => {
     const headOfficeBusiness = {
       id: "head-office",
@@ -1290,7 +1314,7 @@ const restoreDraft = () => {
   };
 
   const currentRole = isAdmin ? "최고관리자" : profile.role || "기사";
-  const canViewSettlement = true;
+  const canViewSettlement = currentRole !== "기사";
   const canManageUsers = currentRole === "최고관리자";
 
   const thisMonth = new Date().toISOString().slice(0, 7);
@@ -1414,8 +1438,7 @@ const restoreDraft = () => {
 
         {view === "settlement" && canViewSettlement && (
           <MonthlySettlement
-            jobs={currentRole === "기사" ? jobs : allJobs}
-            role={currentRole}
+            jobs={allJobs}
             onOpenJob={setSelectedJob}
           />
         )}
@@ -1459,6 +1482,7 @@ const restoreDraft = () => {
             onEnableNotifications={enableJobNotifications}
             notificationPermission={notificationPermission}
             installAvailable={Boolean(deferredInstallPrompt)}
+            homepageUrl={import.meta.env.VITE_HOMEPAGE_URL || ""}
           />
         )}
 
@@ -1534,6 +1558,8 @@ const restoreDraft = () => {
           isSuperAdmin={isAdmin}
           canManageCollection={isAdmin || profile.role === "대표"}
           onMarkCollected={handleMarkCollected}
+          canManageSettlement={isAdmin}
+          onSaveSettlement={handleSaveSettlement}
           onNotice={setNotice}
           onOpenDocument={setDocumentType}
           onEdit={() => startEditJob(selectedJob)}

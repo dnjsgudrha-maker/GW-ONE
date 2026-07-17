@@ -59,6 +59,20 @@ service cloud.firestore {
         );
     }
 
+
+    match /pendingWorkers/{workerId} {
+      allow create, update, delete:
+        if isRepresentative() || isAdmin();
+
+      allow read:
+        if isRepresentative() ||
+           isAdmin() ||
+           (
+             signedIn() &&
+             resource.data.email == request.auth.token.email
+           );
+    }
+
     // 대표 및 관리자의 전체 작업현황(collectionGroup("jobs")) 조회 허용
     match /{documentPath=**}/jobs/{jobId} {
       allow read: if isRepresentative() || isAdmin();

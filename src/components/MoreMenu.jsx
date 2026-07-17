@@ -12,9 +12,10 @@ export default function MoreMenu({
   largeText,
   onEnableNotifications,
   notificationPermission,
-  installAvailable
+  installAvailable,
+  homepageUrl
 }) {
-  const canViewSettlement = true;
+  const canViewSettlement = role !== "기사";
   const canManageUsers = role === "최고관리자";
 
   return (
@@ -74,6 +75,14 @@ export default function MoreMenu({
           <small>처음 쓰는 분 안내</small>
         </button>
 
+        {homepageUrl && (
+          <button onClick={() => window.location.href = homepageUrl}>
+            <span>🏠</span>
+            <strong>GW배관솔루션 홈페이지</strong>
+            <small>고객용 홈페이지로 이동</small>
+          </button>
+        )}
+
         <button onClick={onToggleLargeText}>
           <span>가</span>
           <strong>{largeText ? "기본 글씨" : "큰 글씨"}</strong>
@@ -112,8 +121,8 @@ export default function MoreMenu({
       </div>
 
       <div className="version-box">
-        <strong>GW ONE v4.4.1</strong>
-        <span>현장 실사용 완성 버전</span>
+        <strong>GW ONE v5.1</strong>
+        <span>건별 정산·홈페이지 연동 버전</span>
       </div>
     </section>
   );

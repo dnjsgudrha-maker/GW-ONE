@@ -1,0 +1,14 @@
+GW ONE v5.0 작업일지 3단계 전환 오류 수정
+
+수정 내용
+- JobForm.jsx의 중복된 1단계 렌더링 조건 제거
+- 3단계 확인 화면의 존재하지 않는 selectedBusiness 변수 제거
+- 본사 업체정보(headOfficeBusiness)로 통일
+- 주소/작업내용 값이 비어 있거나 undefined여도 단계 전환 코드가 멈추지 않도록 안전 처리
+- 누락되어 있던 Vite 빌드 진입파일과 설정 복구
+- 실제 npm run build 성공 확인
+- site 폴더에 수정된 배포본 생성
+
+적용
+- 기존 GW-ONE 프로젝트에 src, site, package.json, package-lock.json, vite.config.js, index.html을 덮어쓰기
+- GitHub Desktop에서 Commit 후 Push

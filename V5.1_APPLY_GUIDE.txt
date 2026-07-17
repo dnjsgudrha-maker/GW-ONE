@@ -1,0 +1,22 @@
+GW ONE v5.1 건별 정산 + 홈페이지 연동
+
+1. 건별 정산
+- 기사 작업 등록 후 최고관리자가 작업 상세를 엽니다.
+- 기사 비율을 건별로 선택/직접 입력합니다.
+- 본사 비율은 100-기사비율로 자동 계산됩니다.
+- 정산기준은 원금 기준 작업금액(baseChargeAmount, 없으면 chargeAmount) - 자재비입니다.
+- 월별정산에서는 각 작업에 저장된 기사/본사 정산금을 기사별로 합산합니다.
+
+2. 권한
+- 건별 비율 저장: 최고관리자만
+- 월별 정산 조회: 대표/최고관리자
+- 기사 계정: 정산 메뉴 숨김
+
+3. 홈페이지 연동
+- 배포 전에 .env 파일에 VITE_HOMEPAGE_URL=홈페이지주소 를 입력합니다.
+- 홈페이지 소스에는 HOMEPAGE_GWONE_INTEGRATION.html의 버튼을 복사하고 GW ONE 주소를 실제 주소로 바꿉니다.
+
+4. 배포
+npm install
+npm run build
+firebase deploy --only hosting,firestore:rules,storage
