@@ -4220,3 +4220,36 @@ button { cursor: pointer; }
 }
 
 .review-request-panel{margin:16px 0;padding:16px;border:1px solid #dbe5ee;border-radius:14px;background:#f8fbfd}.review-request-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.review-status-chip{font-size:12px;font-weight:800;padding:6px 9px;border-radius:999px;background:#eef2f5}.review-status-chip.requested{background:#fff3cd}.review-status-chip.completed{background:#d9f7e5}.review-status-chip.gift-sent{background:#e7e0ff}.review-request-button,.review-gift-button{width:100%;margin-top:10px;padding:12px 14px;border:0;border-radius:10px;font-weight:800;cursor:pointer}.review-request-button{background:#1f6feb;color:white}.review-gift-button{background:#6f42c1;color:white}
+
+/* v6.1 간편 첫 화면 */
+.home-menu-page { max-width: 760px; margin: 0 auto; }
+.home-menu-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.home-menu-heading h2 { margin:0; font-size:24px; }
+.home-menu-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
+.home-menu-grid button {
+  min-height:124px;
+  border:1px solid #e2e8f0;
+  border-radius:18px;
+  background:#fff;
+  padding:16px 12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  box-shadow:0 5px 16px rgba(15, 23, 42, 0.06);
+  cursor:pointer;
+}
+.home-menu-grid button:active { transform:scale(.985); }
+.home-menu-grid button > span { font-size:31px; line-height:1; font-weight:800; }
+.home-menu-grid button strong { font-size:18px; }
+.home-menu-grid button small { color:#718096; font-size:12px; }
+.home-menu-grid .home-menu-primary { background:#173f72; border-color:#173f72; color:#fff; }
+.home-menu-grid .home-menu-primary small { color:rgba(255,255,255,.78); }
+@media (min-width:720px) {
+  .home-menu-grid { grid-template-columns:repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width:420px) {
+  .home-menu-grid button { min-height:112px; padding:13px 8px; }
+  .home-menu-grid button strong { font-size:17px; }
+}

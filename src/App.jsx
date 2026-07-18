@@ -60,6 +60,7 @@ import TopBar from "./components/TopBar";
 import UserManagement from "./components/UserManagement";
 import PendingScreen from "./components/PendingScreen";
 import WorkDashboard from "./components/WorkDashboard";
+import HomeMenu from "./components/HomeMenu";
 import CollectionManagement from "./components/CollectionManagement";
 import MoreMenu from "./components/MoreMenu";
 import ProfilePage from "./components/ProfilePage";
@@ -1424,10 +1425,24 @@ const restoreDraft = () => {
         {notice && <div className="notice">{notice}</div>}
 
         {view === "dashboard" && (
+          <HomeMenu
+            role={currentRole}
+            onCreateJob={openNewJobForm}
+            onOpenToday={() => setView("stats")}
+            onOpenJobs={() => setView("list")}
+            onOpenCustomers={() => setView("customers")}
+            onOpenUsers={() => setView("users")}
+            onOpenCollection={() => setView("collection")}
+            onOpenProfile={() => setView("profile")}
+            onOpenMore={() => setView("more")}
+          />
+        )}
+
+        {view === "stats" && (
           <WorkDashboard
             jobs={currentRole === "기사" ? jobs : allJobs}
             profiles={allProfiles}
-              onOpenJob={setSelectedJob}
+            onOpenJob={setSelectedJob}
             onCreateJob={openNewJobForm}
           />
         )}
@@ -1567,11 +1582,11 @@ const restoreDraft = () => {
 
       <nav className="bottom-nav bottom-nav-simple">
         <button
-          className={view === "dashboard" ? "active" : ""}
+          className={view === "dashboard" || view === "stats" ? "active" : ""}
           onClick={() => setView("dashboard")}
         >
-          <span>▦</span>
-          현황
+          <span>⌂</span>
+          홈
         </button>
         <button
           className={view === "list" ? "active" : ""}
