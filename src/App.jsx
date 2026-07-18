@@ -1675,6 +1675,13 @@ const restoreDraft = () => {
                 allProfiles,
                 true
               );
+              const assignedProfile = (allProfiles || []).find(
+                (item) =>
+                  item?.uid ===
+                  (selectedJob.assignedWorkerUid || selectedJob.ownerUid)
+              );
+              const assignedRole = String(assignedProfile?.role || "").trim();
+
               return {
                 businessName: hq.businessName,
                 representativeName: hq.representativeName,
@@ -1682,7 +1689,8 @@ const restoreDraft = () => {
                 businessContact: hq.contact,
                 businessEmail: hq.businessEmail,
                 businessAddress: hq.businessAddress,
-                stampDataUrl: hq.stampDataUrl || selectedJob.stampDataUrl
+                stampDataUrl: hq.stampDataUrl || selectedJob.stampDataUrl,
+                hideRepresentative: assignedRole === "기사"
               };
             })()
           }}

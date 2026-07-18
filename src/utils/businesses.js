@@ -53,12 +53,15 @@ export function headOfficeBusinessFromProfile(profile = {}, allProfiles = []) {
       String(profile.role || "").toLowerCase()
     );
 
+  // 본사 원본 프로필을 가장 먼저 사용합니다.
+  // 기사 프로필에 남아 있는 예전 headOfficeBusiness 스냅샷은
+  // 본사 정보가 조회되지 않을 때만 보조값으로 사용합니다.
   const source =
+    headquartersProfile ||
+    (ownLooksLikeHeadOffice ? profile : null) ||
     (saved.businessNumber || saved.representativeName || saved.businessAddress
       ? saved
       : null) ||
-    headquartersProfile ||
-    (ownLooksLikeHeadOffice ? profile : {}) ||
     {};
 
   return normalizeHeadOffice(source);

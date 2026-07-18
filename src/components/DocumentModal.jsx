@@ -20,7 +20,9 @@ function DocumentHeader({ title, job }) {
       <div className="doc-title">{title}</div>
       <div className="doc-subtitle">
         <span>{job.businessName || "(주)지더블유솔루션"}</span>
-        <span>대표자 {job.representativeName || "-"}</span>
+        {!job.hideRepresentative && (
+          <span>대표자 {job.representativeName || "-"}</span>
+        )}
         <span>사업자등록번호 {job.businessNumber || "-"}</span>
         <span>담당기사 {job.worker || "-"}</span>
       </div>
@@ -206,7 +208,9 @@ function DocumentFooter({ job }) {
     <footer className="doc-footer">
       <div>
         <strong>{job.businessName || "(주)지더블유솔루션"}</strong>
-        <span>대표자 {job.representativeName || "-"}</span>
+        {!job.hideRepresentative && (
+          <span>대표자 {job.representativeName || "-"}</span>
+        )}
         <span>사업자등록번호 {job.businessNumber || "-"}</span>
         <span>담당기사 {job.worker || "-"}</span>
       </div>
