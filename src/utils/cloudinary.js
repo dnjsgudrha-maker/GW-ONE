@@ -143,9 +143,25 @@ export function optimizedVideoUrl(url) {
   );
 }
 
-export function existingPhotoItem(url, index = 0) {
+
+export function normalizeMediaUrl(value) {
+  if (typeof value === "string") return value.trim();
+  if (value && typeof value === "object") {
+    return String(
+      value.url ||
+      value.secure_url ||
+      value.downloadURL ||
+      value.src ||
+      ""
+    ).trim();
+  }
+  return "";
+}
+
+export function existingPhotoItem(value, index = 0) {
+  const url = normalizeMediaUrl(value);
   return {
-    id: `existing-${index}-${url}`,
+    id: `existing-${index}-${url || "missing"}`,
     url,
     publicId: "",
     originalName: `기존 사진 ${index + 1}`,
@@ -156,9 +172,10 @@ export function existingPhotoItem(url, index = 0) {
   };
 }
 
-export function existingVideoItem(url, index = 0) {
+export function existingVideoItem(value, index = 0) {
+  const url = normalizeMediaUrl(value);
   return {
-    id: `existing-video-${index}-${url}`,
+    id: `existing-video-${index}-${url || "missing"}`,
     url,
     publicId: "",
     originalName: `기존 동영상 ${index + 1}`,
@@ -171,8 +188,8 @@ export function existingVideoItem(url, index = 0) {
 
 export function mediaUrls(items = []) {
   return items
-    .filter((item) => item?.status === "done" && item?.url)
-    .map((item) => item.url);
+    .filter((item) => item?.status === "done" && normalizeMediaUrl(item))
+    .map((item) => normalizeMediaUrl(item));
 }
 
 export const photoUrls = mediaUrls;

@@ -1,3 +1,4 @@
+import { normalizeMediaUrl } from "../utils/cloudinary";
 import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
@@ -28,13 +29,14 @@ function DocumentHeader({ title, job }) {
 }
 
 function PhotoGroup({ title, urls = [] }) {
-  if (!urls.length) return null;
+  const normalizedUrls = urls.map(normalizeMediaUrl).filter(Boolean);
+  if (!normalizedUrls.length) return null;
 
   return (
     <section className="doc-section doc-photo-section">
       <h3>{title}</h3>
       <div className="doc-photo-grid">
-        {urls.map((url, index) => (
+        {normalizedUrls.map((url, index) => (
           <a
             href={url}
             target="_blank"

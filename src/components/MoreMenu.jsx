@@ -108,7 +108,7 @@ export default function MoreMenu({
       </div>
 
       <div className="version-box">
-        <strong>GW ONE v6.1</strong>
+        <strong>GW ONE v6.4.1</strong>
         <span>간편 첫 화면 운영 버전</span>
       </div>
     </section>
