@@ -158,6 +158,18 @@ export function normalizeMediaUrl(value) {
   return "";
 }
 
+
+export function optimizedPhotoUrl(value, width = 1200) {
+  const url = normalizeMediaUrl(value);
+  if (!url || !url.includes("/upload/")) return url;
+
+  const safeWidth = Math.max(320, Math.min(2000, Number(width) || 1200));
+  return url.replace(
+    "/upload/",
+    `/upload/f_jpg,q_auto:good,c_limit,w_${safeWidth},fl_progressive/`
+  );
+}
+
 export function existingPhotoItem(value, index = 0) {
   const url = normalizeMediaUrl(value);
   return {

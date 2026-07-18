@@ -1,7 +1,7 @@
 import { formatWon } from "../utils/formatters";
 import { getPaymentBreakdown } from "../utils/settlement";
 import { shareJob } from "../utils/share";
-import { normalizeMediaUrl } from "../utils/cloudinary";
+import { normalizeMediaUrl, optimizedPhotoUrl } from "../utils/cloudinary";
 
 function Detail({ label, value }) {
   return (
@@ -35,7 +35,7 @@ function PhotoSection({ title, urls = [] }) {
         {normalizedUrls.map((url, index) => (
           <a href={url} target="_blank" rel="noreferrer" key={`${url}-${index}`}>
             <img
-              src={url}
+              src={optimizedPhotoUrl(url, 1400)}
               alt={`${title} ${index + 1}`}
               loading="lazy"
               referrerPolicy="no-referrer"

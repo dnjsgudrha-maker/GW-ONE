@@ -1,4 +1,4 @@
-import { normalizeMediaUrl } from "../utils/cloudinary";
+import { normalizeMediaUrl, optimizedPhotoUrl } from "../utils/cloudinary";
 import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
@@ -45,7 +45,7 @@ function PhotoGroup({ title, urls = [] }) {
             rel="noreferrer"
             key={`${title}-${url}-${index}`}
           >
-            <img src={url} alt={`${title} ${index + 1}`} />
+            <img src={optimizedPhotoUrl(url, 1400)} alt={`${title} ${index + 1}`} />
             <span>{index + 1}</span>
           </a>
         ))}
