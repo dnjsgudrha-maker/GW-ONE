@@ -1445,6 +1445,7 @@ const restoreDraft = () => {
             onOpenCollection={() => setView("collection")}
             onOpenProfile={() => setView("profile")}
             onOpenMore={() => setView("more")}
+            jobs={currentRole === "기사" ? jobs : allJobs}
           />
         )}
 
@@ -1452,6 +1453,7 @@ const restoreDraft = () => {
           <WorkDashboard
             jobs={currentRole === "기사" ? jobs : allJobs}
             profiles={allProfiles}
+            currentRole={currentRole}
             onOpenJob={setSelectedJob}
             onCreateJob={openNewJobForm}
           />

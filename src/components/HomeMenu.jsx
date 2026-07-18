@@ -1,3 +1,6 @@
+import { useMemo } from "react";
+import { formatWon } from "../utils/formatters";
+
 export default function HomeMenu({
   role,
   onCreateJob,
@@ -7,16 +10,36 @@ export default function HomeMenu({
   onOpenUsers,
   onOpenCollection,
   onOpenProfile,
-  onOpenMore
+  onOpenMore,
+  jobs = []
 }) {
   const isWorker = role === "기사";
   const canManageUsers = role === "최고관리자";
+  const sales = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const month = today.slice(0, 7);
+    const todayJobs = jobs.filter((job) => job.workDate === today);
+    const monthJobs = jobs.filter((job) => String(job.workDate || "").startsWith(month));
+    return {
+      todayCount: todayJobs.length,
+      monthCount: monthJobs.length,
+      todayAmount: todayJobs.reduce((sum, job) => sum + Number(job.chargeAmount || 0), 0),
+      monthAmount: monthJobs.reduce((sum, job) => sum + Number(job.chargeAmount || 0), 0)
+    };
+  }, [jobs]);
 
   return (
     <section className="panel home-menu-page">
       <div className="home-menu-heading">
         <h2>GW ONE</h2>
         <span className="role-chip">{role}</span>
+      </div>
+
+      <div className="home-sales-grid">
+        <div><span>오늘 작업</span><strong>{sales.todayCount}건</strong></div>
+        <div><span>오늘 매출</span><strong>{formatWon(sales.todayAmount)}</strong></div>
+        <div><span>이번 달 작업</span><strong>{sales.monthCount}건</strong></div>
+        <div><span>이번 달 매출</span><strong>{formatWon(sales.monthAmount)}</strong></div>
       </div>
 
       <div className="home-menu-grid">

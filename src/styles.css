@@ -4253,3 +4253,40 @@ button { cursor: pointer; }
   .home-menu-grid button { min-height:112px; padding:13px 8px; }
   .home-menu-grid button strong { font-size:17px; }
 }
+
+
+/* v6.3 첫 화면 매출 요약 */
+.home-sales-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0 18px;
+}
+.home-sales-grid > div {
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  background: #fff;
+  padding: 14px;
+  min-width: 0;
+}
+.home-sales-grid span {
+  display: block;
+  color: #76839a;
+  font-size: 12px;
+  margin-bottom: 7px;
+}
+.home-sales-grid strong {
+  display: block;
+  font-size: 19px;
+  overflow-wrap: anywhere;
+}
+.doc-subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 12px;
+}
+@media (max-width: 720px) {
+  .home-sales-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-sales-grid strong { font-size: 17px; }
+}
