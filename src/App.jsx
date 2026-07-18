@@ -610,7 +610,7 @@ const restoreDraft = () => {
       if (isAdmin) {
         const headOfficeBusiness = {
           id: "head-office",
-          businessName: "지더블유솔루션",
+          businessName: "(주)지더블유솔루션",
           representativeName: savedProfile.representativeName || "",
           businessNumber: savedProfile.businessNumber || "",
           contact: savedProfile.contact || "",
@@ -954,7 +954,7 @@ const restoreDraft = () => {
         paymentTotal,
         paymentDifference: chargeAmount - paymentTotal,
         businessName:
-          "지더블유솔루션",
+          "(주)지더블유솔루션",
         representativeName:
           selectedBusiness.representativeName?.trim() || "",
         registrantName,
@@ -1133,7 +1133,7 @@ const restoreDraft = () => {
 
     const reviewUrl = `${homepageBase}/?review=1&jobId=${encodeURIComponent(job.id)}&ownerUid=${encodeURIComponent(ownerUid)}`;
     const message = [
-      "안녕하세요. GW배관솔루션입니다.",
+      "안녕하세요. (주)지더블유솔루션입니다.",
       "",
       "오늘 서비스를 이용해 주셔서 진심으로 감사합니다.",
       "서비스가 만족스러우셨다면 아래 링크를 통해 소중한 후기를 남겨주세요.",
@@ -1144,7 +1144,7 @@ const restoreDraft = () => {
       "커피쿠폰 또는 소정의 사은품을 보내드립니다.",
       "",
       "감사합니다.",
-      "GW배관솔루션",
+      "(주)지더블유솔루션",
       "1670-1404"
     ].join("\n");
 
@@ -1195,7 +1195,7 @@ const restoreDraft = () => {
   const approveUser = async (uid) => {
     const headOfficeBusiness = {
       id: "head-office",
-      businessName: "지더블유솔루션",
+      businessName: "(주)지더블유솔루션",
       representativeName: profile.representativeName || "",
       businessNumber: profile.businessNumber || "",
       contact: profile.contact || "",

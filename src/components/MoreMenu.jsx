@@ -65,7 +65,7 @@ export default function MoreMenu({
         {homepageUrl && (
           <button onClick={() => window.location.href = homepageUrl}>
             <span>🏠</span>
-            <strong>GW배관솔루션 홈페이지</strong>
+            <strong>(주)지더블유솔루션 홈페이지</strong>
             <small>고객용 홈페이지로 이동</small>
           </button>
         )}
