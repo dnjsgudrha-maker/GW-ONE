@@ -40,6 +40,7 @@ import {
   isValidBusinessNumber
 } from "./utils/businessProfile";
 import { resolveDocumentBusiness } from "./utils/businesses";
+import { COMPANY } from "./config/company";
 import {
   existingPhotoItem,
   existingVideoItem,
@@ -1126,11 +1127,9 @@ const restoreDraft = () => {
     }
 
     const ownerUid = job.ownerUid || user.uid;
-    const homepageBase = String(import.meta.env.VITE_HOMEPAGE_URL || "").replace(/\/$/, "");
-    if (!homepageBase) {
-      setNotice(".env의 VITE_HOMEPAGE_URL에 홈페이지 주소를 먼저 입력해 주세요.");
-      return;
-    }
+    const homepageBase = String(
+      import.meta.env.VITE_HOMEPAGE_URL || COMPANY.homepageUrl
+    ).replace(/\/$/, "");
 
     const reviewUrl = `${homepageBase}/?review=1&jobId=${encodeURIComponent(job.id)}&ownerUid=${encodeURIComponent(ownerUid)}`;
     const message = [
@@ -1160,8 +1159,19 @@ const restoreDraft = () => {
       setSelectedJob(updatedJob);
 
       const digits = String(job.phone).replace(/[^0-9+]/g, "");
-      window.location.href = `sms:${digits}?body=${encodeURIComponent(message)}`;
-      setNotice("문자 앱을 열었습니다. 내용을 확인한 뒤 전송해 주세요.");
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        // iOS는 &body, Android는 ?body 형식이 가장 안정적입니다.
+        const separator = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+          ? "&"
+          : "?";
+        window.location.href = `sms:${digits}${separator}body=${encodeURIComponent(message)}`;
+        setNotice("문자 앱을 열었습니다. 내용을 확인한 뒤 전송해 주세요.");
+      } else {
+        await navigator.clipboard.writeText(message);
+        setNotice("PC에서는 문자 내용을 클립보드에 복사했습니다. 휴대폰에서 붙여넣어 전송해 주세요.");
+      }
     } catch (error) {
       setNotice(`후기 요청 상태를 저장하지 못했습니다: ${error.message}`);
     }
@@ -1653,7 +1663,27 @@ const restoreDraft = () => {
       {selectedJob && documentType && (
         <DocumentModal
           type={documentType}
-          job={selectedJob}
+          job={{
+            ...selectedJob,
+            ...(() => {
+              const hq = resolveDocumentBusiness(
+                profile,
+                "head-office",
+                null,
+                allProfiles,
+                true
+              );
+              return {
+                businessName: hq.businessName,
+                representativeName: hq.representativeName,
+                businessNumber: hq.businessNumber,
+                businessContact: hq.contact,
+                businessEmail: hq.businessEmail,
+                businessAddress: hq.businessAddress,
+                stampDataUrl: hq.stampDataUrl || selectedJob.stampDataUrl
+              };
+            })()
+          }}
           onClose={() => setDocumentType(null)}
         />
       )}

@@ -1,3 +1,5 @@
+import { COMPANY } from "../config/company";
+
 export function ownBusinessFromProfile(profile = {}) {
   return {
     id: "own",
@@ -12,39 +14,54 @@ export function ownBusinessFromProfile(profile = {}) {
   };
 }
 
+export const HEAD_OFFICE_BUSINESS_NAME = COMPANY.businessName;
 
-export const HEAD_OFFICE_BUSINESS_NAME = "지더블유솔루션";
-
-export function headOfficeBusinessFromProfile(profile = {}) {
-  const saved = profile.headOfficeBusiness;
-
-  if (saved?.businessName) {
-    return {
-      id: saved.id || "head-office",
-      businessName: HEAD_OFFICE_BUSINESS_NAME,
-      representativeName: saved.representativeName || "",
-      businessNumber: saved.businessNumber || "",
-      contact: saved.contact || "",
-      businessEmail: saved.businessEmail || "",
-      businessAddress: saved.businessAddress || "",
-      stampDataUrl: saved.stampDataUrl || "",
-      isHeadOffice: true
-    };
-  }
-
-  // 기사 프로필에 본사 스냅샷이 아직 없더라도 기사 개인 사업자정보나
-  // 기사 직인이 문서에 섞이지 않도록 본사 명칭만 사용합니다.
+function normalizeHeadOffice(source = {}) {
   return {
     id: "head-office",
-    businessName: HEAD_OFFICE_BUSINESS_NAME,
-    representativeName: "",
-    businessNumber: "",
-    contact: "",
-    businessEmail: "",
-    businessAddress: "",
-    stampDataUrl: "",
+    businessName: COMPANY.businessName,
+    representativeName: source.representativeName || COMPANY.representativeName,
+    businessNumber: source.businessNumber || COMPANY.businessNumber,
+    contact: source.contact || COMPANY.contact,
+    businessEmail: source.businessEmail || COMPANY.businessEmail,
+    businessAddress: source.businessAddress || COMPANY.businessAddress,
+    stampDataUrl:
+      source.stampDataUrl || source.stampUrl || COMPANY.stampDataUrl,
     isHeadOffice: true
   };
+}
+
+export function headOfficeBusinessFromProfile(profile = {}, allProfiles = []) {
+  // 1순위: 기사/대표 프로필에 동기화된 본사 스냅샷
+  const saved = profile.headOfficeBusiness || {};
+
+  // 2순위: 전체 프로필 중 본사(대표/관리자 또는 상호 일치) 정보
+  const headquartersProfile = (allProfiles || []).find((item) => {
+    const role = String(item?.role || "").toLowerCase();
+    return (
+      item?.businessName === COMPANY.businessName ||
+      role === "대표" ||
+      role === "owner" ||
+      role === "representative"
+    );
+  });
+
+  // 최고관리자가 본인 프로필을 보고 있을 때는 본인 업체정보가 본사 원본입니다.
+  const ownLooksLikeHeadOffice =
+    profile.businessName === COMPANY.businessName ||
+    ["대표", "owner", "representative", "최고관리자"].includes(
+      String(profile.role || "").toLowerCase()
+    );
+
+  const source =
+    (saved.businessNumber || saved.representativeName || saved.businessAddress
+      ? saved
+      : null) ||
+    headquartersProfile ||
+    (ownLooksLikeHeadOffice ? profile : {}) ||
+    {};
+
+  return normalizeHeadOffice(source);
 }
 
 function workerBusinessFromProfile(worker = {}) {
@@ -115,7 +132,7 @@ export function resolveDocumentBusiness(
   useHeadOffice = false
 ) {
   if (useHeadOffice) {
-    return headOfficeBusinessFromProfile(profile);
+    return headOfficeBusinessFromProfile(profile, allProfiles);
   }
 
   if (fallback?.businessName && fallback.id === businessId) {
