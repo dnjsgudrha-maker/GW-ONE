@@ -65,7 +65,7 @@ export default function MoreMenu({
         {homepageUrl && (
           <button onClick={() => window.location.href = homepageUrl}>
             <span>🏠</span>
-            <strong>(주)지더블유솔루션 홈페이지</strong>
+            <strong>GW배관솔루션 홈페이지</strong>
             <small>고객용 홈페이지로 이동</small>
           </button>
         )}
@@ -108,7 +108,7 @@ export default function MoreMenu({
       </div>
 
       <div className="version-box">
-        <strong>GW ONE v6.4.3</strong>
+        <strong>GW ONE v6.1</strong>
         <span>간편 첫 화면 운영 버전</span>
       </div>
     </section>

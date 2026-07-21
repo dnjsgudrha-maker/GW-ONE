@@ -1,7 +1,6 @@
 import { formatWon } from "../utils/formatters";
 import { getPaymentBreakdown } from "../utils/settlement";
 import { shareJob } from "../utils/share";
-import { normalizeMediaUrl, optimizedPhotoUrl } from "../utils/cloudinary";
 
 function Detail({ label, value }) {
   return (
@@ -21,28 +20,16 @@ function DetailBlock({ label, value }) {
   );
 }
 
-function PhotoSection({ title, urls = [] }) {
-  const normalizedUrls = urls
-    .map(normalizeMediaUrl)
-    .filter((url) => url && !url.startsWith("blob:"));
-
-  if (!normalizedUrls.length) return null;
+function PhotoSection({ title, urls }) {
+  if (!urls.length) return null;
 
   return (
     <div className="detail-block">
       <span>{title}</span>
       <div className="modal-photos">
-        {normalizedUrls.map((url, index) => (
-          <a href={url} target="_blank" rel="noreferrer" key={`${url}-${index}`}>
-            <img
-              src={optimizedPhotoUrl(url, 1400)}
-              alt={`${title} ${index + 1}`}
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              onError={(event) => {
-                event.currentTarget.classList.add("photo-image-load-error");
-              }}
-            />
+        {urls.map((url) => (
+          <a href={url} target="_blank" rel="noreferrer" key={url}>
+            <img src={url} alt={title} />
           </a>
         ))}
       </div>

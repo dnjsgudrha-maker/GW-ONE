@@ -75,6 +75,7 @@ function App() {
   const [view, setView] = useState("dashboard");
   const [jobs, setJobs] = useState([]);
   const [profile, setProfile] = useState(initialProfile);
+  const [companyHeadOffice, setCompanyHeadOffice] = useState(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [stampFile, setStampFile] = useState(null);
   const [profileSaving, setProfileSaving] = useState(false);
@@ -109,6 +110,29 @@ function App() {
   const notificationListenerReady = useRef(false);
   const jobAlertTimer = useRef(null);
 
+  const documentProfile = useMemo(() => (
+    companyHeadOffice
+      ? { ...profile, headOfficeBusiness: companyHeadOffice }
+      : profile
+  ), [profile, companyHeadOffice]);
+
+  useEffect(() => {
+    if (!user || !db) {
+      setCompanyHeadOffice(null);
+      return;
+    }
+
+    return onSnapshot(
+      doc(db, "companySettings", "headOffice"),
+      (snapshot) => {
+        setCompanyHeadOffice(snapshot.exists() ? snapshot.data() : null);
+      },
+      (error) => {
+        console.warn("본사 정보를 불러오지 못했습니다:", error);
+        setCompanyHeadOffice(null);
+      }
+    );
+  }, [user]);
 
 
   useEffect(() => {
@@ -610,7 +634,7 @@ const restoreDraft = () => {
       if (isAdmin) {
         const headOfficeBusiness = {
           id: "head-office",
-          businessName: "(주)지더블유솔루션",
+          businessName: COMPANY.businessName,
           representativeName: savedProfile.representativeName || "",
           businessNumber: savedProfile.businessNumber || "",
           contact: savedProfile.contact || "",
@@ -618,6 +642,13 @@ const restoreDraft = () => {
           businessAddress: savedProfile.businessAddress || "",
           stampDataUrl: savedProfile.stampDataUrl || ""
         };
+
+        await setDoc(
+          doc(db, "companySettings", "headOffice"),
+          { ...headOfficeBusiness, updatedAt: serverTimestamp() },
+          { merge: true }
+        );
+        setCompanyHeadOffice(headOfficeBusiness);
 
         await Promise.all(
           (allProfiles || [])
@@ -904,7 +935,7 @@ const restoreDraft = () => {
         "작성자";
 
       const selectedBusiness = resolveDocumentBusiness(
-        profile,
+        documentProfile,
         "head-office",
         null,
         allProfiles,
@@ -954,7 +985,7 @@ const restoreDraft = () => {
         paymentTotal,
         paymentDifference: chargeAmount - paymentTotal,
         businessName:
-          "(주)지더블유솔루션",
+          "지더블유솔루션",
         representativeName:
           selectedBusiness.representativeName?.trim() || "",
         registrantName,
@@ -1133,7 +1164,7 @@ const restoreDraft = () => {
 
     const reviewUrl = `${homepageBase}/?review=1&jobId=${encodeURIComponent(job.id)}&ownerUid=${encodeURIComponent(ownerUid)}`;
     const message = [
-      "안녕하세요. (주)지더블유솔루션입니다.",
+      "안녕하세요. GW배관솔루션입니다.",
       "",
       "오늘 서비스를 이용해 주셔서 진심으로 감사합니다.",
       "서비스가 만족스러우셨다면 아래 링크를 통해 소중한 후기를 남겨주세요.",
@@ -1144,7 +1175,7 @@ const restoreDraft = () => {
       "커피쿠폰 또는 소정의 사은품을 보내드립니다.",
       "",
       "감사합니다.",
-      "(주)지더블유솔루션",
+      "GW배관솔루션",
       "1670-1404"
     ].join("\n");
 
@@ -1193,9 +1224,9 @@ const restoreDraft = () => {
 
 
   const approveUser = async (uid) => {
-    const headOfficeBusiness = {
+    const headOfficeBusiness = companyHeadOffice || {
       id: "head-office",
-      businessName: "(주)지더블유솔루션",
+      businessName: COMPANY.businessName,
       representativeName: profile.representativeName || "",
       businessNumber: profile.businessNumber || "",
       contact: profile.contact || "",
@@ -1481,7 +1512,7 @@ const restoreDraft = () => {
 
         {view === "form" && (
           <JobForm
-            profile={profile}
+            profile={documentProfile}
             allProfiles={allProfiles}
             setProfile={setProfile}
             stampFile={stampFile}
@@ -1669,19 +1700,12 @@ const restoreDraft = () => {
             ...selectedJob,
             ...(() => {
               const hq = resolveDocumentBusiness(
-                profile,
+                documentProfile,
                 "head-office",
                 null,
                 allProfiles,
                 true
               );
-              const assignedProfile = (allProfiles || []).find(
-                (item) =>
-                  item?.uid ===
-                  (selectedJob.assignedWorkerUid || selectedJob.ownerUid)
-              );
-              const assignedRole = String(assignedProfile?.role || "").trim();
-
               return {
                 businessName: hq.businessName,
                 representativeName: hq.representativeName,
@@ -1689,8 +1713,7 @@ const restoreDraft = () => {
                 businessContact: hq.contact,
                 businessEmail: hq.businessEmail,
                 businessAddress: hq.businessAddress,
-                stampDataUrl: hq.stampDataUrl || selectedJob.stampDataUrl,
-                hideRepresentative: assignedRole === "기사"
+                stampDataUrl: hq.stampDataUrl || selectedJob.stampDataUrl
               };
             })()
           }}

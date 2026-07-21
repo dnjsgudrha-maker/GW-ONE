@@ -2,7 +2,7 @@
 // 대표자·사업자번호·주소·직인은 최고관리자 프로필의 본사 정보가 우선 적용됩니다.
 export const COMPANY = {
   id: "head-office",
-  businessName: "(주)지더블유솔루션",
+  businessName: "지더블유솔루션",
   representativeName: "",
   businessNumber: "",
   contact: "1670-1404",

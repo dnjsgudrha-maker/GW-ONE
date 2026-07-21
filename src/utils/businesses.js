@@ -32,36 +32,38 @@ function normalizeHeadOffice(source = {}) {
 }
 
 export function headOfficeBusinessFromProfile(profile = {}, allProfiles = []) {
-  // 1순위: 기사/대표 프로필에 동기화된 본사 스냅샷
+  // 1순위: 인증된 전역 본사 설정(companySettings/headOffice) 또는
+  // 기사 프로필에 동기화된 본사 스냅샷. 기사 자신의 업체정보는 사용하지 않습니다.
   const saved = profile.headOfficeBusiness || {};
 
-  // 2순위: 전체 프로필 중 본사(대표/관리자 또는 상호 일치) 정보
+  // 2순위: 전체 프로필을 볼 수 있는 관리자 화면에서는 최고관리자/본사 프로필.
   const headquartersProfile = (allProfiles || []).find((item) => {
-    const role = String(item?.role || "").toLowerCase();
+    const role = String(item?.role || "").trim().toLowerCase();
+    const businessName = String(item?.businessName || "").replace(/\s/g, "");
+    const configuredName = String(COMPANY.businessName || "").replace(/\s/g, "");
     return (
-      item?.businessName === COMPANY.businessName ||
+      role === "최고관리자" ||
       role === "대표" ||
       role === "owner" ||
-      role === "representative"
+      role === "representative" ||
+      businessName === configuredName ||
+      businessName.includes("지더블유솔루션")
     );
   });
 
-  // 최고관리자가 본인 프로필을 보고 있을 때는 본인 업체정보가 본사 원본입니다.
-  const ownLooksLikeHeadOffice =
-    profile.businessName === COMPANY.businessName ||
-    ["대표", "owner", "representative", "최고관리자"].includes(
-      String(profile.role || "").toLowerCase()
-    );
+  const currentRole = String(profile.role || "").trim().toLowerCase();
+  const currentIsHeadOffice =
+    currentRole === "최고관리자" ||
+    currentRole === "대표" ||
+    currentRole === "owner" ||
+    currentRole === "representative";
 
-  // 본사 원본 프로필을 가장 먼저 사용합니다.
-  // 기사 프로필에 남아 있는 예전 headOfficeBusiness 스냅샷은
-  // 본사 정보가 조회되지 않을 때만 보조값으로 사용합니다.
   const source =
-    headquartersProfile ||
-    (ownLooksLikeHeadOffice ? profile : null) ||
     (saved.businessNumber || saved.representativeName || saved.businessAddress
       ? saved
       : null) ||
+    headquartersProfile ||
+    (currentIsHeadOffice ? profile : {}) ||
     {};
 
   return normalizeHeadOffice(source);

@@ -83,6 +83,15 @@ service cloud.firestore {
     }
 
     // ─────────────────────────────────────────────
+    // GW ONE 본사 문서정보
+    // 기사 계정은 읽기만 가능하고 최고관리자만 수정합니다.
+    // ─────────────────────────────────────────────
+    match /companySettings/{docId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────
     // GW ONE 사용자 및 권한
     // ─────────────────────────────────────────────
     match /admins/{userId} {

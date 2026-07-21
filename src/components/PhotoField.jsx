@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { optimizedPhotoUrl, uploadPhotoToCloudinary } from "../utils/cloudinary";
+import { uploadPhotoToCloudinary } from "../utils/cloudinary";
 
 const MAX_PHOTOS = 10;
 
@@ -75,14 +75,9 @@ export default function PhotoField({
   };
 
   const appendFiles = (selectedFiles) => {
-    const incoming = Array.from(selectedFiles || []).filter((file) => {
-      const type = String(file?.type || "").toLowerCase();
-      const name = String(file?.name || "").toLowerCase();
-      return (
-        type.startsWith("image/") ||
-        /\.(jpe?g|png|webp|gif|heic|heif|avif|bmp)$/i.test(name)
-      );
-    });
+    const incoming = Array.from(selectedFiles || []).filter((file) =>
+      file.type.startsWith("image/")
+    );
 
     if (!incoming.length) return;
 
@@ -221,11 +216,7 @@ export default function PhotoField({
               key={item.id}
             >
               <img
-                src={
-                  item.status === "done"
-                    ? optimizedPhotoUrl(item.url, 720)
-                    : item.url
-                }
+                src={item.url}
                 alt={`${title} ${index + 1}`}
                 loading="lazy"
                 referrerPolicy="no-referrer"
@@ -233,16 +224,14 @@ export default function PhotoField({
                   const image = event.currentTarget;
                   const retryCount = Number(image.dataset.retryCount || 0);
 
-                  if (item.status === "done" && item.url && retryCount < 2) {
-                    const nextRetryCount = retryCount + 1;
-                    image.dataset.retryCount = String(nextRetryCount);
-
-                    const fallbackUrl =
-                      nextRetryCount === 1
-                        ? optimizedPhotoUrl(item.url, 1200)
-                        : item.url;
-                    const separator = fallbackUrl.includes("?") ? "&" : "?";
-                    image.src = `${fallbackUrl}${separator}gw_retry=${Date.now()}`;
+                  if (
+                    item.status === "done" &&
+                    item.url &&
+                    retryCount < 1
+                  ) {
+                    image.dataset.retryCount = "1";
+                    const separator = item.url.includes("?") ? "&" : "?";
+                    image.src = `${item.url}${separator}gw_retry=${Date.now()}`;
                     return;
                   }
 

@@ -71,7 +71,7 @@ export default function JobForm({
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
   const [saveError, setSaveError] = useState("");
   const canAssignWorker = currentRole === "최고관리자";
-  const headOfficeBusiness = headOfficeBusinessFromProfile(profile);
+  const headOfficeBusiness = headOfficeBusinessFromProfile(profile, allProfiles);
   const workerOptions = (allProfiles || [])
     .filter(
       (item) =>

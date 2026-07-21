@@ -1,4 +1,3 @@
-import { normalizeMediaUrl, optimizedPhotoUrl } from "../utils/cloudinary";
 import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
@@ -19,10 +18,8 @@ function DocumentHeader({ title, job }) {
     <>
       <div className="doc-title">{title}</div>
       <div className="doc-subtitle">
-        <span>{job.businessName || "(주)지더블유솔루션"}</span>
-        {!job.hideRepresentative && (
-          <span>대표자 {job.representativeName || "-"}</span>
-        )}
+        <span>{job.businessName || "지더블유솔루션"}</span>
+        <span>대표자 {job.representativeName || "-"}</span>
         <span>사업자등록번호 {job.businessNumber || "-"}</span>
         <span>담당기사 {job.worker || "-"}</span>
       </div>
@@ -31,21 +28,20 @@ function DocumentHeader({ title, job }) {
 }
 
 function PhotoGroup({ title, urls = [] }) {
-  const normalizedUrls = urls.map(normalizeMediaUrl).filter(Boolean);
-  if (!normalizedUrls.length) return null;
+  if (!urls.length) return null;
 
   return (
     <section className="doc-section doc-photo-section">
       <h3>{title}</h3>
       <div className="doc-photo-grid">
-        {normalizedUrls.map((url, index) => (
+        {urls.map((url, index) => (
           <a
             href={url}
             target="_blank"
             rel="noreferrer"
             key={`${title}-${url}-${index}`}
           >
-            <img src={optimizedPhotoUrl(url, 1400)} alt={`${title} ${index + 1}`} />
+            <img src={url} alt={`${title} ${index + 1}`} />
             <span>{index + 1}</span>
           </a>
         ))}
@@ -207,10 +203,8 @@ function DocumentFooter({ job }) {
   return (
     <footer className="doc-footer">
       <div>
-        <strong>{job.businessName || "(주)지더블유솔루션"}</strong>
-        {!job.hideRepresentative && (
-          <span>대표자 {job.representativeName || "-"}</span>
-        )}
+        <strong>{job.businessName || "지더블유솔루션"}</strong>
+        <span>대표자 {job.representativeName || "-"}</span>
         <span>사업자등록번호 {job.businessNumber || "-"}</span>
         <span>담당기사 {job.worker || "-"}</span>
       </div>
